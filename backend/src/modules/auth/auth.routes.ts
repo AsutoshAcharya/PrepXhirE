@@ -1,10 +1,11 @@
 import { Router } from "express";
-import { register, login, isMe } from "./auth.controller";
-
+import container from "../../container";
+// import { register, login, isMe } from "./auth.controller";
 const router = Router();
+const controller = container.resolve("authController");
 
-router.post("/register", register);
-router.post("/login", login);
-router.post("/me", isMe);
+router.post("/register", controller.register);
+router.post("/login", controller.logIn);
+// router.post("/me", controller.isMe);
 
 export default router;

@@ -1,7 +1,22 @@
+// src/modules/auth/auth.controller.ts
 import { Request, Response } from "express";
+import { Dependencies } from "../../container";
+import AuthService from "./auth.service";
 
-export const register = async (req: Request, res: Response) => {};
+export default class AuthController {
+  private readonly authService;
 
-export const login = async (req: Request, res: Response) => {};
+  constructor({ authService }: Dependencies) {
+    this.authService = authService;
+  }
 
-export const isMe = async (req: Request, res: Response) => {};
+  public register(req: Request, res: Response) {
+    this.authService.register();
+  }
+
+  public logIn(req: Request, res: Response) {}
+
+  // public isMe(req: Request, res: Response): Promise<void> {
+
+  // }
+}

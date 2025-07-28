@@ -13,6 +13,7 @@
   "dependencies": {
     "@types/body-parser": "^1.19.6",
     "@types/cors": "^2.8.19",
+    "awilix": "^12.0.5",
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",

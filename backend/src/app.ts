@@ -26,7 +26,7 @@ class App {
   }
 
   private setupRoutes() {
-    this.app.use(authRoutes);
+    this.app.use("/auth", authRoutes);
   }
 
   public async run() {
