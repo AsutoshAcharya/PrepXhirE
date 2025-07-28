@@ -30,14 +30,17 @@ class App {
   }
 
   public async run() {
-    await connectToDb().then(async () => {
+    try {
+      await connectToDb();
       const myDb = mongoose.connection.useDb("mydb", { useCache: true });
       const students = await myDb.collection("students").find({}).toArray();
       console.log("Student", students);
       this.app.listen(this.port, () => {
         console.log(`Server running on port ${this.port}`);
       });
-    });
+    } catch (error) {
+      console.error("Failed to start the server:", error);
+    }
   }
 }
 
