@@ -4,6 +4,7 @@ import { Model } from "mongoose";
 import AuthService from "../modules/auth/auth.service";
 import AuthController from "../modules/auth/auth.controller";
 import { IUserDocument } from "../models/user.model";
+import ResponseBuilder from "../utils/ResponseBuilder";
 
 export interface Dependencies {
   userModel: Model<IUserDocument>;
