@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { JobTitle, UserRole } from "../../models/user.model";
 
-export const authSchema = z.object({
+export const registerSchema = z.object({
   fullName: z.string().min(1),
   email: z.string().max(65),
   password: z.string().min(6),
@@ -11,3 +11,10 @@ export const authSchema = z.object({
   company: z.string().optional(),
   skills: z.array(z.string()).optional(),
 });
+export const loginSchema = registerSchema.pick({
+  email: true,
+  password: true,
+});
+
+export type RegisterDto = z.infer<typeof registerSchema>;
+export type LoginDto = Pick<RegisterDto, "email" | "password">;

@@ -5,3 +5,7 @@ export type ResponseStruct = {
   data: any | null;
   status: number;
 };
+
+export type ServiceResult<T> =
+  | { success: true; data: T }
+  | { success: false; message: string };

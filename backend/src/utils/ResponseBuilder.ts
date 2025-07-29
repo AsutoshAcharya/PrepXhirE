@@ -75,6 +75,10 @@ class ResponseBuilder {
     return this.error({ message, status: 404 });
   }
 
+  public conflict(message: string): this {
+    return this.error({ message, status: 409 });
+  }
+
   public serverError(message = "Internal Server Error"): this {
     return this.error({ message, status: 500 });
   }
