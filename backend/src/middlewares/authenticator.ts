@@ -18,30 +18,26 @@ export async function verifyToken(
     const userId = Some.String(req.headers["user"]);
 
     if (!token || !userId) {
-      const response = rb.unauthorized().build();
-      return res.status(response.status).json(response);
+      return rb.unauthorized().send(res);
     }
 
     jwt.verify(token, process.env.JWT as string, async (err, decoded) => {
       if (err || !decoded) {
-        const response = rb.unauthorized().build();
-        return res.status(response.status).json(response);
+        return rb.unauthorized().send(res);
       }
 
       const { id } = decoded as JwtDecodeData;
       const user = await User.findById(id);
 
       if (!user) {
-        const response = rb.notFound().build();
-        return res.status(response.status).json(response);
+        return rb.notFound().send(res);
       }
 
       req.user = user;
       next();
     });
   } catch {
-    const response = rb.unauthorized().build();
-    res.status(response.status).json(response);
+    return rb.unauthorized().send(res);
   }
 }
 
@@ -52,10 +48,8 @@ export function isInterviewer(
 ) {
   const rb = new ResponseBuilder({ type: "verify-user" });
 
-  if (!req.user || req.user.role !== UserRole.Interviewer) {
-    const response = rb.unauthorized(UNAUTHORIZED_MESSAGE).build();
-    return res.status(response.status).json(response);
-  }
+  if (!req.user || req.user.role !== UserRole.Interviewer)
+    return rb.unauthorized(UNAUTHORIZED_MESSAGE).send(res);
 
   next();
 }
@@ -63,10 +57,8 @@ export function isInterviewer(
 export function isAdmin(req: CustomRequest, res: Response, next: NextFunction) {
   const rb = new ResponseBuilder({ type: "verify-user" });
 
-  if (!req.user || req.user.role !== UserRole.Admin) {
-    const response = rb.unauthorized(UNAUTHORIZED_MESSAGE).build();
-    return res.status(response.status).json(response);
-  }
+  if (!req.user || req.user.role !== UserRole.Admin)
+    return rb.unauthorized(UNAUTHORIZED_MESSAGE).send(res);
 
   next();
 }
@@ -75,10 +67,8 @@ export function hasRole(...allowedRoles: UserRole[]) {
   return (req: CustomRequest, res: Response, next: NextFunction) => {
     const rb = new ResponseBuilder({ type: "verify-user" });
 
-    if (!req.user || !allowedRoles.includes(req.user.role)) {
-      const response = rb.unauthorized(UNAUTHORIZED_MESSAGE).build();
-      return res.status(response.status).json(response);
-    }
+    if (!req.user || !allowedRoles.includes(req.user.role))
+      rb.unauthorized(UNAUTHORIZED_MESSAGE).send(res);
 
     next();
   };
