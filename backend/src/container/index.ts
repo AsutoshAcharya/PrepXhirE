@@ -7,12 +7,13 @@ import { Model } from "mongoose";
 import AuthService from "../modules/auth/auth.service";
 import AuthController from "../modules/auth/auth.controller";
 import { IUserDocument } from "../models/user.model";
-import ResponseBuilder from "../utils/ResponseBuilder";
 import { IMcqDocument } from "../models/mcq.model";
 import McqService from "../modules/mcq/mcq.service";
 import McqController from "../modules/mcq/mcq.controller";
+import Authenticator from "../middlewares/authenticator";
 
 export interface Dependencies {
+  authenticator: Authenticator;
   userModel: Model<IUserDocument>;
   mcqModel: Model<IMcqDocument>;
   authService: AuthService;
@@ -24,6 +25,7 @@ export interface Dependencies {
 const container: AwilixContainer<Dependencies> = createContainer();
 
 container.register({
+  authenticator: asClass(Authenticator).singleton(),
   userModel: asValue(UserModel),
   mcqModel: asValue(McqModel),
   authService: asClass(AuthService).singleton(),

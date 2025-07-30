@@ -1,75 +1,80 @@
 import { NextFunction, Response } from "express";
 import jwt from "jsonwebtoken";
 import { CustomRequest, JwtDecodeData } from "../types/type";
-import { User, UserRole } from "../models/user.model";
+
 import ResponseBuilder from "../utils/ResponseBuilder";
 import Some from "../utils/Some";
-const UNAUTHORIZED_MESSAGE = "You are not authorized for this action";
+import { Dependencies } from "../container";
+import { UserRole } from "../models/user.model";
 
-export async function verifyToken(
-  req: CustomRequest,
-  res: Response,
-  next: NextFunction
-) {
-  const rb = new ResponseBuilder({ type: "auth" });
-
-  try {
-    const token = Some.String(req.headers["token"]);
-    const userId = Some.String(req.headers["user"]);
-
-    if (!token || !userId) {
-      return rb.unauthorized().send(res);
-    }
-
-    jwt.verify(token, process.env.JWT as string, async (err, decoded) => {
-      if (err || !decoded) {
-        return rb.unauthorized().send(res);
-      }
-
-      const { id } = decoded as JwtDecodeData;
-      const user = await User.findById(id);
-
-      if (!user) {
-        return rb.notFound().send(res);
-      }
-
-      req.user = user;
-      next();
-    });
-  } catch {
-    return rb.unauthorized().send(res);
+class Authenticator {
+  private readonly unauthorizedMessage =
+    "You are not authorized for this action";
+  private readonly userModel;
+  private readonly rb;
+  constructor({ userModel }: Dependencies) {
+    this.userModel = userModel;
+    this.rb = new ResponseBuilder({ type: "verify-user" });
   }
-}
+  public verifyToken = (
+    req: CustomRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const token = Some.String(req.headers["token"]);
+      const userId = Some.String(req.headers["user"]);
 
-export function isInterviewer(
-  req: CustomRequest,
-  res: Response,
-  next: NextFunction
-) {
-  const rb = new ResponseBuilder({ type: "verify-user" });
+      if (!token || !userId) {
+        return this.rb.unauthorized().send(res);
+      }
 
-  if (!req.user || req.user.role !== UserRole.Interviewer)
-    return rb.unauthorized(UNAUTHORIZED_MESSAGE).send(res);
+      jwt.verify(token, process.env.JWT as string, async (err, decoded) => {
+        if (err || !decoded) {
+          return this.rb.unauthorized().send(res);
+        }
 
-  next();
-}
+        const { id } = decoded as JwtDecodeData;
+        const user = await this.userModel.findById(id);
 
-export function isAdmin(req: CustomRequest, res: Response, next: NextFunction) {
-  const rb = new ResponseBuilder({ type: "verify-user" });
+        if (!user) {
+          return this.rb.notFound().send(res);
+        }
 
-  if (!req.user || req.user.role !== UserRole.Admin)
-    return rb.unauthorized(UNAUTHORIZED_MESSAGE).send(res);
+        req.user = user;
+        next();
+      });
+    } catch {
+      return this.rb.unauthorized().send(res);
+    }
+  };
 
-  next();
-}
-
-export function hasRole(...allowedRoles: UserRole[]) {
-  return (req: CustomRequest, res: Response, next: NextFunction) => {
-    const rb = new ResponseBuilder({ type: "verify-user" });
-
-    if (!req.user || !allowedRoles.includes(req.user.role))
-      rb.unauthorized(UNAUTHORIZED_MESSAGE).send(res);
+  public isInterviewer = (
+    req: CustomRequest,
+    res: Response,
+    next: NextFunction
+  ) => {
+    if (!req.user || req.user.role !== UserRole.Interviewer)
+      return this.rb.unauthorized(this.unauthorizedMessage).send(res);
 
     next();
   };
+
+  public isAdmin = (req: CustomRequest, res: Response, next: NextFunction) => {
+    if (!req.user || req.user.role !== UserRole.Admin)
+      return this.rb.unauthorized(this.unauthorizedMessage).send(res);
+
+    next();
+  };
+
+  public hasRole = (...allowedRoles: UserRole[]) => {
+    return (req: CustomRequest, res: Response, next: NextFunction) => {
+      if (!req.user || !allowedRoles.includes(req.user.role))
+        return this.rb.unauthorized(this.unauthorizedMessage).send(res);
+
+      next();
+    };
+  };
 }
+
+export default Authenticator;
