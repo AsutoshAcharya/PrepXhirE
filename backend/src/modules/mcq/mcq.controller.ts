@@ -1,11 +1,12 @@
 import { Request, Response } from "express";
 import { Dependencies } from "../../container";
-import { CustomRequest } from "../../types/type";
+import { CustomRequest, InsertDto } from "../../types/type";
 import McqService from "./mcq.service";
 import { CreateMcqDto, createMcqSchema } from "./mcq.schema";
 import ResponseBuilder from "../../utils/ResponseBuilder";
 import { QuestionSource } from "../../models/mcq.model";
 import Some from "../../utils/Some";
+import { Types } from "mongoose";
 
 class McqController {
   private readonly mcqService: McqService;
@@ -26,7 +27,7 @@ class McqController {
       return this.responseBuilder.badRequest("No MCQs provided").send(res);
     }
 
-    const parsedMcqs: Array<CreateMcqDto> = [];
+    const parsedMcqs: Array<InsertDto> = [];
     for (const mcq of mcqs) {
       const result = createMcqSchema.safeParse(mcq);
       if (!result.success) {
@@ -35,14 +36,14 @@ class McqController {
           .badRequest("Invalid mcq question")
           .send(res);
       }
-      parsedMcqs.push(result.data);
+      parsedMcqs.push({
+        ...result.data,
+        createdById: req.user._id,
+        source: QuestionSource.interviewer,
+      });
     }
 
-    const serviceResult = await this.mcqService.addBulkMcqs(
-      parsedMcqs,
-      QuestionSource.interviewer,
-      req.user._id
-    );
+    const serviceResult = await this.mcqService.addBulkMcqs(parsedMcqs);
 
     if (!serviceResult.success) {
       return this.responseBuilder.badRequest(serviceResult.message).send(res);

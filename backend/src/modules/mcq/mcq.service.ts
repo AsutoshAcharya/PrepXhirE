@@ -1,8 +1,6 @@
 import { Types } from "mongoose";
 import { Dependencies } from "../../container";
-import { IMcqDocument, QuestionSource } from "../../models/mcq.model";
-import { ServiceResult } from "../../types/type";
-import { CreateMcqDto } from "./mcq.schema";
+import { InsertDto, ServiceResult } from "../../types/type";
 
 class McqService {
   private readonly mcqModel;
@@ -11,26 +9,11 @@ class McqService {
   }
 
   async addBulkMcqs(
-    mcqs: Array<CreateMcqDto>,
-    source: QuestionSource,
-    userId: Types.ObjectId
+    mcqs: Array<InsertDto>
   ): Promise<ServiceResult<Array<Types.ObjectId>>> {
     try {
-      const insertData = mcqs.map((mcq) => ({
-        jobTitle: mcq.jobTitle,
-        difficulty: mcq.difficulty,
-        question: mcq.question,
-        options: mcq.options,
-        correctIndex: mcq.correctIndex,
-        explanation: mcq.explanation,
-        source,
-        ...(userId && { createdById: userId }),
-      }));
-
-      const insertedMcqs = await this.mcqModel.insertMany(insertData);
-
+      const insertedMcqs = await this.mcqModel.insertMany(mcqs);
       const ids = insertedMcqs.map((doc) => doc._id);
-
       return {
         success: true,
         data: ids,

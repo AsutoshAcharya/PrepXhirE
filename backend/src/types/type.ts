@@ -1,6 +1,9 @@
 import { Request } from "express";
 import { IUserDocument, UserRole } from "../models/user.model";
 import { JwtPayload } from "jsonwebtoken";
+import { CreateMcqDto } from "../modules/mcq/mcq.schema";
+import { Types } from "mongoose";
+import { QuestionSource } from "../models/mcq.model";
 
 export type ResponseStruct = {
   success: boolean | null;
@@ -25,3 +28,8 @@ export interface JwtDecodeData extends JwtPayload {
 export interface CustomRequest extends Request {
   user?: IUserDocument;
 }
+
+export type InsertDto = CreateMcqDto & {
+  createdById?: Types.ObjectId;
+  source: QuestionSource;
+};
