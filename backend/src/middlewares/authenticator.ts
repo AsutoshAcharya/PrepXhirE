@@ -4,8 +4,9 @@ import { CustomRequest, JwtDecodeData } from "../types/type";
 import { User, UserRole } from "../models/user.model";
 import ResponseBuilder from "../utils/ResponseBuilder";
 import Some from "../utils/Some";
+const UNAUTHORIZED_MESSAGE = "You are not authorized for this action";
 
-async function authenticator(
+export async function verifyToken(
   req: CustomRequest,
   res: Response,
   next: NextFunction
@@ -52,9 +53,7 @@ export function isInterviewer(
   const rb = new ResponseBuilder({ type: "verify-user" });
 
   if (!req.user || req.user.role !== UserRole.Interviewer) {
-    const response = rb
-      .unauthorized("You are not authorized for this action")
-      .build();
+    const response = rb.unauthorized(UNAUTHORIZED_MESSAGE).build();
     return res.status(response.status).json(response);
   }
 
@@ -65,13 +64,22 @@ export function isAdmin(req: CustomRequest, res: Response, next: NextFunction) {
   const rb = new ResponseBuilder({ type: "verify-user" });
 
   if (!req.user || req.user.role !== UserRole.Admin) {
-    const response = rb
-      .unauthorized("You are not authorized for this action")
-      .build();
+    const response = rb.unauthorized(UNAUTHORIZED_MESSAGE).build();
     return res.status(response.status).json(response);
   }
 
   next();
 }
 
-export default authenticator;
+export function hasRole(...allowedRoles: UserRole[]) {
+  return (req: CustomRequest, res: Response, next: NextFunction) => {
+    const rb = new ResponseBuilder({ type: "verify-user" });
+
+    if (!req.user || !allowedRoles.includes(req.user.role)) {
+      const response = rb.unauthorized(UNAUTHORIZED_MESSAGE).build();
+      return res.status(response.status).json(response);
+    }
+
+    next();
+  };
+}
