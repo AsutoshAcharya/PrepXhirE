@@ -9,7 +9,6 @@ export const createMcqSchema = z.object({
   options: z.array(z.string()).min(4).max(4),
   correctIndex: z.number(),
   explanation: z.string().optional(),
-  source: z.enum(QuestionSource),
 });
 
 export type CreateMcqDto = z.infer<typeof createMcqSchema>;

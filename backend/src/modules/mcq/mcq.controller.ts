@@ -2,8 +2,10 @@ import { Request, Response } from "express";
 import { Dependencies } from "../../container";
 import { CustomRequest } from "../../types/type";
 import McqService from "./mcq.service";
-import { createMcqSchema } from "./mcq.schema";
+import { CreateMcqDto, createMcqSchema } from "./mcq.schema";
 import ResponseBuilder from "../../utils/ResponseBuilder";
+import { QuestionSource } from "../../models/mcq.model";
+import Some from "../../utils/Some";
 
 class McqController {
   private readonly mcqService: McqService;
@@ -13,8 +15,45 @@ class McqController {
     this.responseBuilder = new ResponseBuilder({ type: "mcq" });
   }
 
-  public createMcq = (req: CustomRequest, res: Response) => {
-    const result = createMcqSchema.safeParse(req.body);
+  public createMcq = async (req: CustomRequest, res: Response) => {
+    if (!req.user) {
+      return this.responseBuilder.unauthorized().send(res);
+    }
+
+    const mcqs = Some.Array(req.body?.mcqs);
+
+    if (mcqs.length === 0) {
+      return this.responseBuilder.badRequest("No MCQs provided").send(res);
+    }
+
+    const parsedMcqs: Array<CreateMcqDto> = [];
+    for (const mcq of mcqs) {
+      const result = createMcqSchema.safeParse(mcq);
+      if (!result.success) {
+        // console.log(result.error);
+        return this.responseBuilder
+          .badRequest("Invalid mcq question")
+          .send(res);
+      }
+      parsedMcqs.push(result.data);
+    }
+
+    const serviceResult = await this.mcqService.addBulkMcqs(
+      parsedMcqs,
+      QuestionSource.interviewer,
+      req.user._id
+    );
+
+    if (!serviceResult.success) {
+      return this.responseBuilder.badRequest(serviceResult.message).send(res);
+    }
+
+    return this.responseBuilder
+      .success({
+        message: "MCQs created successfully",
+        data: serviceResult.data,
+      })
+      .send(res);
   };
 }
 

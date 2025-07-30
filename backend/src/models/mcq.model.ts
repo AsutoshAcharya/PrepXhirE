@@ -44,7 +44,7 @@ const mcqSchema = new Schema(
       enum: Object.values(QuestionSource),
       required: true,
     },
-    interviewerId: {
+    createdById: {
       type: Types.ObjectId,
       required: false,
     },
