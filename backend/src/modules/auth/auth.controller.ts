@@ -1,10 +1,7 @@
-// src/modules/auth/auth.controller.ts
 import { Request, Response } from "express";
 import { Dependencies } from "../../container";
-
-import ResponseBuilder from "../../utils/ResponseBuilder";
 import { loginSchema, registerSchema } from "./auth.schema";
-
+import ResponseBuilder from "../../utils/ResponseBuilder";
 export default class AuthController {
   private readonly authService;
   private readonly responseBuilder;
@@ -18,53 +15,41 @@ export default class AuthController {
     const result = registerSchema.safeParse(req.body);
 
     if (!result.success) {
-      const resp = this.responseBuilder.badRequest("Invalid payload").build();
-      return res.status(resp.status).json(resp);
+      return this.responseBuilder.badRequest("Invalid payload").send(res);
     }
 
     const serviceResult = await this.authService.register(result.data);
 
     if (!serviceResult.success) {
-      const resp = this.responseBuilder.conflict(serviceResult.message).build();
-      return res.status(resp.status).json(resp);
+      return this.responseBuilder.conflict(serviceResult.message).send(res);
     }
 
-    const resp = this.responseBuilder
+    return this.responseBuilder
       .success({
         message: "User registered successfully",
         data: serviceResult.data,
       })
-      .build();
-
-    return res.status(resp.status).json(resp);
+      .send(res);
   };
 
   public logIn = async (req: Request, res: Response) => {
-    const parsedResult = loginSchema.safeParse(req.body);
-    if (parsedResult.success) {
-      const serviceResult = await this.authService.logIn(parsedResult.data);
-      if (!serviceResult.success) {
-        const resp = this.responseBuilder
-          .badRequest(serviceResult.message)
-          .build();
-        return res.status(resp.status).json(resp);
-      }
-      const resp = this.responseBuilder
-        .success({
-          message: "Login successfully",
-          data: serviceResult.data,
-        })
-        .build();
-      return res.status(resp.status).json(resp);
-    } else {
-      const resp = this.responseBuilder
-        .badRequest("Invalid login details")
-        .build();
-      return res.status(resp.status).json(resp);
+    const result = loginSchema.safeParse(req.body);
+
+    if (!result.success) {
+      return this.responseBuilder.badRequest("Invalid login details").send(res);
     }
+
+    const serviceResult = await this.authService.logIn(result.data);
+
+    if (!serviceResult.success) {
+      return this.responseBuilder.badRequest(serviceResult.message).send(res);
+    }
+
+    return this.responseBuilder
+      .success({
+        message: "Login successfully",
+        data: serviceResult.data,
+      })
+      .send(res);
   };
-
-  // public isMe(req: Request, res: Response): Promise<void> {
-
-  // }
 }

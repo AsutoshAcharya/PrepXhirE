@@ -1,5 +1,6 @@
 import { Map } from "immutable";
 import { ResponseStruct } from "../types/type";
+import { Response } from "express";
 
 class ResponseBuilder {
   private response: Map<
@@ -93,6 +94,11 @@ class ResponseBuilder {
 
   public build(): ResponseStruct {
     return this.response.toJS() as ResponseStruct;
+  }
+
+  public send(res: Response): Response {
+    const built = this.build();
+    return res.status(built.status).json(built);
   }
 }
 
