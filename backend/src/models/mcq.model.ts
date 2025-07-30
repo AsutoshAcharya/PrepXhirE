@@ -13,7 +13,7 @@ export enum QuestionSource {
 
 const mcqSchema = new Schema(
   {
-    jobType: { type: String, enum: Object.values(JobTitle), required: true },
+    jobTitle: { type: String, enum: Object.values(JobTitle), required: true },
     difficulty: {
       type: String,
       enum: Object.values(Difficulty),

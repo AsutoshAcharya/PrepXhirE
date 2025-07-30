@@ -1,40 +1,77 @@
 import { NextFunction, Response } from "express";
-import ResponseBuilder from "../utils/ResponseBuilder";
 import jwt from "jsonwebtoken";
-import Some from "../utils/Some";
 import { CustomRequest, JwtDecodeData } from "../types/type";
-import { User } from "../models/user.model";
+import { User, UserRole } from "../models/user.model";
+import ResponseBuilder from "../utils/ResponseBuilder";
+import Some from "../utils/Some";
 
-function authenticator(req: CustomRequest, res: Response, next: NextFunction) {
+async function authenticator(
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) {
   const rb = new ResponseBuilder({ type: "auth" });
 
   try {
-    // console.log(req.headers);
     const token = Some.String(req.headers["token"]);
     const userId = Some.String(req.headers["user"]);
-    console.log(token, userId);
+
     if (!token || !userId) {
-      const responseBuilder = rb.unauthorized().build();
-      return res.status(responseBuilder.status).send(responseBuilder);
+      const response = rb.unauthorized().build();
+      return res.status(response.status).json(response);
     }
-    jwt.verify(token, process.env.JWT as string, async (err, decodeData) => {
-      if (err) throw new Error();
-      console.log(decodeData);
-      const { id } = decodeData as JwtDecodeData;
-      const user = await User.findById(id);
-      console.log(user);
-      if (user) {
-        req.user = user;
-        next();
-      } else {
-        const responseBuilder = rb.notFound().build();
-        res.status(responseBuilder.status).json(responseBuilder);
+
+    jwt.verify(token, process.env.JWT as string, async (err, decoded) => {
+      if (err || !decoded) {
+        const response = rb.unauthorized().build();
+        return res.status(response.status).json(response);
       }
+
+      const { id } = decoded as JwtDecodeData;
+      const user = await User.findById(id);
+
+      if (!user) {
+        const response = rb.notFound().build();
+        return res.status(response.status).json(response);
+      }
+
+      req.user = user;
+      next();
     });
-  } catch (error) {
-    const responseBuilder = rb.unauthorized().build();
-    res.status(responseBuilder.status).send(responseBuilder);
+  } catch {
+    const response = rb.unauthorized().build();
+    res.status(response.status).json(response);
   }
+}
+
+export function isInterviewer(
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) {
+  const rb = new ResponseBuilder({ type: "verify-user" });
+
+  if (!req.user || req.user.role !== UserRole.Interviewer) {
+    const response = rb
+      .unauthorized("You are not authorized for this action")
+      .build();
+    return res.status(response.status).json(response);
+  }
+
+  next();
+}
+
+export function isAdmin(req: CustomRequest, res: Response, next: NextFunction) {
+  const rb = new ResponseBuilder({ type: "verify-user" });
+
+  if (!req.user || req.user.role !== UserRole.Admin) {
+    const response = rb
+      .unauthorized("You are not authorized for this action")
+      .build();
+    return res.status(response.status).json(response);
+  }
+
+  next();
 }
 
 export default authenticator;

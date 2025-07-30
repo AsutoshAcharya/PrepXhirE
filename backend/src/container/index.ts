@@ -9,12 +9,16 @@ import AuthController from "../modules/auth/auth.controller";
 import { IUserDocument } from "../models/user.model";
 import ResponseBuilder from "../utils/ResponseBuilder";
 import { IMcqDocument } from "../models/mcq.model";
+import McqService from "../modules/mcq/mcq.service";
+import McqController from "../modules/mcq/mcq.controller";
 
 export interface Dependencies {
   userModel: Model<IUserDocument>;
   mcqModel: Model<IMcqDocument>;
   authService: AuthService;
   authController: AuthController;
+  mcqService: McqService;
+  mcqController: McqController;
 }
 
 const container: AwilixContainer<Dependencies> = createContainer();
@@ -24,6 +28,8 @@ container.register({
   mcqModel: asValue(McqModel),
   authService: asClass(AuthService).singleton(),
   authController: asClass(AuthController).singleton(),
+  mcqService: asClass(McqService).singleton(),
+  mcqController: asClass(McqController).singleton(),
 });
 
 export default container;

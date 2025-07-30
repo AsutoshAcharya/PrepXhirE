@@ -2,8 +2,9 @@ import express, { Express } from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
-import authRoutes from "./modules/auth/auth.routes";
 import dotenv from "dotenv";
+import authRoutes from "./modules/auth/auth.routes";
+import mcqRoutes from "./modules/mcq/mcq.routes";
 import connectToDb from "./config/db";
 
 dotenv.config();
@@ -27,6 +28,7 @@ class App {
 
   private setupRoutes() {
     this.app.use("/auth", authRoutes);
+    this.app.use("/mcq", mcqRoutes);
   }
 
   public async run() {
