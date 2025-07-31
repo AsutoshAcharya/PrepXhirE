@@ -11,6 +11,7 @@ import { IMcqDocument } from "../models/mcq.model";
 import McqService from "../modules/mcq/mcq.service";
 import McqController from "../modules/mcq/mcq.controller";
 import Authenticator from "../middlewares/authenticator";
+import AiService from "../modules/ai/ai.service";
 
 export interface Dependencies {
   authenticator: Authenticator;
@@ -20,6 +21,7 @@ export interface Dependencies {
   authController: AuthController;
   mcqService: McqService;
   mcqController: McqController;
+  aiService: AiService;
 }
 
 const container: AwilixContainer<Dependencies> = createContainer();
@@ -32,6 +34,7 @@ container.register({
   authController: asClass(AuthController).singleton(),
   mcqService: asClass(McqService).singleton(),
   mcqController: asClass(McqController).singleton(),
+  aiService: asClass(AiService).singleton(),
 });
 
 export default container;

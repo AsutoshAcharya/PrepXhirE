@@ -1,18 +1,22 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { Dependencies } from "../../container";
 import { CustomRequest, InsertDto } from "../../types/type";
 import McqService from "./mcq.service";
 import { CreateMcqDto, createMcqSchema } from "./mcq.schema";
 import ResponseBuilder from "../../utils/ResponseBuilder";
-import { QuestionSource } from "../../models/mcq.model";
+import { Difficulty, QuestionSource } from "../../models/mcq.model";
 import Some from "../../utils/Some";
 import { Types } from "mongoose";
+import { JobTitle } from "../../models/user.model";
 
 class McqController {
   private readonly mcqService: McqService;
   private readonly responseBuilder;
-  constructor({ mcqService }: Dependencies) {
+  private readonly aiService;
+  constructor({ mcqService, aiService }: Dependencies) {
     this.mcqService = mcqService;
+    this.aiService = aiService;
+
     this.responseBuilder = new ResponseBuilder({ type: "mcq" });
   }
 
@@ -55,6 +59,24 @@ class McqController {
         data: serviceResult.data,
       })
       .send(res);
+  };
+  public generateMcq = async (req: CustomRequest, res: Response) => {
+    const topics = ["React.js", "HTML", "CSS", "JavaScript", "TypeScript"];
+    const serviceResult = await this.aiService.generateMcqQuestions(
+      JobTitle.FrontendDeveloper,
+      Difficulty.medium,
+      topics
+    );
+    if (serviceResult.success) {
+      return this.responseBuilder
+        .success({
+          message: "Questions Generated",
+          data: serviceResult.data,
+        })
+        .send(res);
+    } else {
+      return this.responseBuilder.serverError(serviceResult.message).send(res);
+    }
   };
 }
 
