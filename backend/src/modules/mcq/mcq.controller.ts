@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { Dependencies } from "../../container";
-import { CustomRequest, InsertDto } from "../../types/type";
+import { CustomRequest, GenerateMcqDto, InsertDto } from "../../types/type";
 import McqService from "./mcq.service";
 import { CreateMcqDto, createMcqSchema } from "./mcq.schema";
 import ResponseBuilder from "../../utils/ResponseBuilder";
@@ -61,16 +61,26 @@ class McqController {
       .send(res);
   };
   public generateMcq = async (req: CustomRequest, res: Response) => {
-    const topics = ["React.js", "HTML", "CSS", "JavaScript", "TypeScript"];
+    const topics = [
+      "Conflict Resolution",
+      "Negotiation",
+      "Teamwork & Collaboration",
+    ];
 
     if (!req.user) throw new Error("User not found");
-    const role = UserRole.Candidate;
-    const serviceResult = await this.aiService.generateMcqQuestions(
-      JobTitle.FrontendDeveloper,
-      Difficulty.medium,
+    const role = UserRole.Interviewer;
+
+    const generateMcqDto: GenerateMcqDto = {
+      jobTitle: JobTitle.HRAnalyst,
+      difficulty: Difficulty.easy,
       topics,
-      role
-    );
+      role,
+      createdById: req.user._id,
+      questionCount: 1,
+    };
+
+    const serviceResult =
+      await this.aiService.generateMcqQuestions(generateMcqDto);
 
     if (serviceResult.success) {
       return this.responseBuilder
@@ -79,9 +89,8 @@ class McqController {
           data: serviceResult.data,
         })
         .send(res);
-    } else {
-      return this.responseBuilder.serverError(serviceResult.message).send(res);
     }
+    return this.responseBuilder.serverError(serviceResult.message).send(res);
   };
 }
 

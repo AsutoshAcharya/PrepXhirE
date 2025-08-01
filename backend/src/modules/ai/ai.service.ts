@@ -6,11 +6,12 @@ import {
   IMcqDocument,
   QuestionSource,
 } from "../../models/mcq.model";
-import { InsertDto, ServiceResult } from "../../types/type";
+import { GenerateMcqDto, InsertDto, ServiceResult } from "../../types/type";
 import { Dependencies } from "../../container";
 
 import Some from "../../utils/Some";
 import pick from "../../utils/pick";
+import { Types } from "mongoose";
 
 dotenv.config();
 class AiService {
@@ -52,14 +53,15 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
 `;
   }
 
-  public async generateMcqQuestions(
-    jobTitle: JobTitle,
-    difficulty: Difficulty,
-    topics: Array<string>,
-    role: UserRole,
-    saveToDb: boolean = false,
-    questionCount?: number
-  ): Promise<ServiceResult<Array<Partial<IMcqDocument>>>> {
+  public async generateMcqQuestions({
+    jobTitle,
+    difficulty,
+    topics,
+    role,
+    createdById,
+    saveToDb = false,
+    questionCount,
+  }: GenerateMcqDto): Promise<ServiceResult<Array<Partial<IMcqDocument>>>> {
     try {
       const serviceResult = await this.mcqService.getMcqsByJobTitle(jobTitle);
       if (serviceResult.success) {
@@ -105,6 +107,7 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
             correctIndex: Some.Number(mcq?.correctIndex),
             explanation: Some.String(mcq?.explanation),
             source: QuestionSource.ai,
+            createdById: createdById,
           };
           insertMcqData.push(insertData);
         });
@@ -119,7 +122,6 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
                   "_id",
                   "difficulty",
                   "createdAt",
-                  "createdById",
                   "question",
                   "options"
                 )

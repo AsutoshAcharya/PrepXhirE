@@ -12,6 +12,7 @@ export enum JobTitle {
   ProductManager = "product_manager",
   UIUXDesigner = "ui_ux_designer",
   SystemAdministrator = "system_administrator",
+  HRAnalyst = "hr_analyst",
 }
 
 export enum UserRole {

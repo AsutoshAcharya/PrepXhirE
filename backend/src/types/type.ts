@@ -1,9 +1,9 @@
 import { Request } from "express";
-import { IUserDocument, UserRole } from "../models/user.model";
+import { IUserDocument, JobTitle, UserRole } from "../models/user.model";
 import { JwtPayload } from "jsonwebtoken";
 import { CreateMcqDto } from "../modules/mcq/mcq.schema";
 import { Types } from "mongoose";
-import { QuestionSource } from "../models/mcq.model";
+import { Difficulty, QuestionSource } from "../models/mcq.model";
 
 export type ResponseStruct = {
   success: boolean | null;
@@ -32,4 +32,14 @@ export interface CustomRequest extends Request {
 export type InsertDto = CreateMcqDto & {
   createdById?: Types.ObjectId;
   source: QuestionSource;
+};
+
+export type GenerateMcqDto = {
+  jobTitle: JobTitle;
+  difficulty: Difficulty;
+  topics: Array<string>;
+  role: UserRole;
+  createdById?: Types.ObjectId;
+  saveToDb?: boolean;
+  questionCount?: number;
 };
