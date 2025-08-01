@@ -13,13 +13,15 @@ class McqService {
 
   async addBulkMcqs(
     mcqs: Array<InsertDto>
-  ): Promise<ServiceResult<Array<Types.ObjectId>>> {
+  ): Promise<ServiceResult<Array<IMcqDocument>>> {
     try {
-      const insertedMcqs = await this.mcqModel.insertMany(mcqs);
-      const ids = insertedMcqs.map((doc) => doc._id);
+      const insertedMcqs = (await this.mcqModel.insertMany(
+        mcqs
+      )) as Array<IMcqDocument>;
+      // console.log(insertedMcqs);
       return {
         success: true,
-        data: ids,
+        data: insertedMcqs,
       };
     } catch (error) {
       return {
@@ -29,7 +31,7 @@ class McqService {
     }
   }
 
-  async getMcqsNyJobTitle(
+  async getMcqsByJobTitle(
     jobTitle: JobTitle,
     getCreatedById: boolean = false
   ): Promise<ServiceResult<Array<IMcqDocument>>> {

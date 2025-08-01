@@ -7,7 +7,7 @@ import ResponseBuilder from "../../utils/ResponseBuilder";
 import { Difficulty, QuestionSource } from "../../models/mcq.model";
 import Some from "../../utils/Some";
 import { Types } from "mongoose";
-import { JobTitle } from "../../models/user.model";
+import { JobTitle, UserRole } from "../../models/user.model";
 
 class McqController {
   private readonly mcqService: McqService;
@@ -62,11 +62,16 @@ class McqController {
   };
   public generateMcq = async (req: CustomRequest, res: Response) => {
     const topics = ["React.js", "HTML", "CSS", "JavaScript", "TypeScript"];
+
+    if (!req.user) throw new Error("User not found");
+    const role = UserRole.Candidate;
     const serviceResult = await this.aiService.generateMcqQuestions(
       JobTitle.FrontendDeveloper,
       Difficulty.medium,
-      topics
+      topics,
+      role
     );
+
     if (serviceResult.success) {
       return this.responseBuilder
         .success({

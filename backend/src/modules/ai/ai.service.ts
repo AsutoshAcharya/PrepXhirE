@@ -1,6 +1,6 @@
 import { Groq } from "groq-sdk";
 import dotenv from "dotenv";
-import { JobTitle } from "../../models/user.model";
+import { JobTitle, UserRole } from "../../models/user.model";
 import {
   Difficulty,
   IMcqDocument,
@@ -8,8 +8,10 @@ import {
 } from "../../models/mcq.model";
 import { InsertDto, ServiceResult } from "../../types/type";
 import { Dependencies } from "../../container";
-import { CreateMcqDto } from "../mcq/mcq.schema";
+
 import Some from "../../utils/Some";
+import pick from "../../utils/pick";
+
 dotenv.config();
 class AiService {
   private readonly groq;
@@ -24,12 +26,13 @@ class AiService {
   }
 
   public getMcqPrompt(
-    jobTitle: string,
-    difficulty: string,
+    jobTitle: JobTitle,
+    difficulty: Difficulty,
     topics: string[],
-    existingMcqs?: Array<string>
+    existingMcqs?: Array<string>,
+    questionCount: number = 5
   ): string {
-    return `Generate 5 multiple-choice questions for the role of "${jobTitle}", focused on: ${topics.join(", ")}.
+    return `Generate ${questionCount} multiple-choice questions for the role of "${jobTitle}", focused on: ${topics.join(", ")}.
 Difficulty: ${difficulty}.
 
 Requirements:
@@ -53,17 +56,21 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
     jobTitle: JobTitle,
     difficulty: Difficulty,
     topics: Array<string>,
-    saveToDb: boolean = false
-  ): Promise<ServiceResult<any>> {
+    role: UserRole,
+    saveToDb: boolean = false,
+    questionCount?: number
+  ): Promise<ServiceResult<Array<Partial<IMcqDocument>>>> {
     try {
-      const serviceResult = await this.mcqService.getMcqsNyJobTitle(jobTitle);
+      const serviceResult = await this.mcqService.getMcqsByJobTitle(jobTitle);
       if (serviceResult.success) {
         const existingQuestions = serviceResult.data.map((d) => d.question);
+
         const prompt = this.getMcqPrompt(
           jobTitle,
           difficulty,
           topics,
-          existingQuestions
+          existingQuestions,
+          questionCount
         );
 
         const response = await this.groq.chat.completions.create({
@@ -83,9 +90,7 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
 
         const parsed = JSON.parse(rawContent);
         mcqs = Array.isArray(parsed) ? parsed : [parsed];
-        console.log(parsed);
 
-        console.log(mcqs);
         if (!Array.isArray(mcqs) || mcqs.length === 0) {
           throw new Error("Parsed data is not a valid array of questions.");
         }
@@ -104,12 +109,29 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
           insertMcqData.push(insertData);
         });
 
-        await this.mcqService.addBulkMcqs(insertMcqData);
-
-        return {
-          success: true,
-          data: mcqs,
-        };
+        const insertResult = await this.mcqService.addBulkMcqs(insertMcqData);
+        // console.log(insertResult);
+        if (insertResult.success) {
+          const data = insertResult.data.map((mcq) =>
+            role === UserRole.Candidate
+              ? pick(
+                  mcq,
+                  "_id",
+                  "difficulty",
+                  "createdAt",
+                  "createdById",
+                  "question",
+                  "options"
+                )
+              : mcq
+          );
+          return {
+            success: true,
+            data: data,
+          };
+        } else {
+          throw new Error("Error inserting questions to db");
+        }
       } else {
         throw new Error("Error fetching questions from db");
       }
