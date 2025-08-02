@@ -11,4 +11,11 @@ export const createMcqSchema = z.object({
   explanation: z.string().optional(),
 });
 
+export const generateMcqQuerySchema = z.object({
+  difficulty: z.enum(Difficulty),
+  jobTitle: z.enum(JobTitle),
+  skills: z.array(z.string()).min(1),
+  questionCount: z.number().max(15).optional(),
+});
+
 export type CreateMcqDto = z.infer<typeof createMcqSchema>;

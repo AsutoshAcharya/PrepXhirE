@@ -2,7 +2,11 @@ import { Response } from "express";
 import { Dependencies } from "../../container";
 import { CustomRequest, GenerateMcqDto, InsertDto } from "../../types/type";
 import McqService from "./mcq.service";
-import { CreateMcqDto, createMcqSchema } from "./mcq.schema";
+import {
+  CreateMcqDto,
+  createMcqSchema,
+  generateMcqQuerySchema,
+} from "./mcq.schema";
 import ResponseBuilder from "../../utils/ResponseBuilder";
 import { Difficulty, QuestionSource } from "../../models/mcq.model";
 import Some from "../../utils/Some";
@@ -59,22 +63,35 @@ class McqController {
       .send(res);
   };
   public generateMcq = async (req: CustomRequest, res: Response) => {
-    const topics = [
-      "Conflict Resolution",
-      "Negotiation",
-      "Teamwork & Collaboration",
-    ];
+    // const topics = [
+    //   "Conflict Resolution",
+    //   "Negotiation",
+    //   "Teamwork & Collaboration",
+    // ];
 
-    if (!req.user) throw new Error("User not found");
-    const role = UserRole.Interviewer;
+    if (!req.user) return this.responseBuilder.unauthorized().send(res);
+    //topics will be based on skills ,send comma separated values
+    const { difficulty, jobRole, skills, questionCount } = req.query;
+
+    const queryData = {
+      difficulty: Some.String(difficulty) as Difficulty,
+      jobTitle: Some.String(jobRole || req.user?.jobTitle) as JobTitle,
+      skills: Some.String(skills).split(","),
+      questionCount: Some.Number(questionCount),
+    };
+    console.log(queryData);
+    const result = generateMcqQuerySchema.safeParse(queryData);
+    if (!result.success)
+      return this.responseBuilder.badRequest("Invalid queries").send(res);
+    console.log(result.data);
 
     const generateMcqDto: GenerateMcqDto = {
-      jobTitle: JobTitle.HRAnalyst,
-      difficulty: Difficulty.easy,
-      topics,
-      role,
+      jobTitle: result.data.jobTitle,
+      difficulty: result.data.difficulty,
+      topics: result.data.skills,
+      role: req.user.role,
       createdById: req.user._id,
-      questionCount: 1,
+      questionCount: result.data.questionCount || 5,
     };
 
     const serviceResult =
