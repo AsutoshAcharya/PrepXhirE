@@ -1,40 +1,56 @@
 import { asClass, asValue, AwilixContainer, createContainer } from "awilix";
-import { User as UserModel } from "../models/user.model";
-
-import { McqQuestion as McqModel } from "../models/mcq.model";
-
 import { Model } from "mongoose";
-import AuthService from "../modules/auth/auth.service";
-import AuthController from "../modules/auth/auth.controller";
-import { IUserDocument } from "../models/user.model";
-import { IMcqDocument } from "../models/mcq.model";
-import McqService from "../modules/mcq/mcq.service";
-import McqController from "../modules/mcq/mcq.controller";
+
+//middlewares
 import Authenticator from "../middlewares/authenticator";
+
+//comtrollers
+import McqController from "../modules/mcq/mcq.controller";
+import AuthController from "../modules/auth/auth.controller";
+
+//services
 import AiService from "../modules/ai/ai.service";
+import AuthService from "../modules/auth/auth.service";
+import McqService from "../modules/mcq/mcq.service";
+
+//models
+import { User as UserModel, IUserDocument } from "../models/user.model";
+import { McqQuestion as McqModel, IMcqDocument } from "../models/mcq.model";
+import {
+  ISubmissionDocument,
+  Submission as SubmissionModel,
+} from "../models/submission.model";
 
 export interface Dependencies {
   authenticator: Authenticator;
+
+  authController: AuthController;
+  mcqController: McqController;
+
+  authService: AuthService;
+  mcqService: McqService;
+  aiService: AiService;
+
   userModel: Model<IUserDocument>;
   mcqModel: Model<IMcqDocument>;
-  authService: AuthService;
-  authController: AuthController;
-  mcqService: McqService;
-  mcqController: McqController;
-  aiService: AiService;
+  submissionModel: Model<ISubmissionDocument>;
 }
 
 const container: AwilixContainer<Dependencies> = createContainer();
 
 container.register({
   authenticator: asClass(Authenticator).singleton(),
+
+  authController: asClass(AuthController).singleton(),
+  mcqController: asClass(McqController).singleton(),
+
+  authService: asClass(AuthService).singleton(),
+  mcqService: asClass(McqService).singleton(),
+  aiService: asClass(AiService).singleton(),
+
   userModel: asValue(UserModel),
   mcqModel: asValue(McqModel),
-  authService: asClass(AuthService).singleton(),
-  authController: asClass(AuthController).singleton(),
-  mcqService: asClass(McqService).singleton(),
-  mcqController: asClass(McqController).singleton(),
-  aiService: asClass(AiService).singleton(),
+  submissionModel: asValue(SubmissionModel),
 });
 
 export default container;
