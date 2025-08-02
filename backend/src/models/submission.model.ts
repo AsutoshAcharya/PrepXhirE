@@ -64,6 +64,7 @@ const submissionSchema = new Schema(
         required: true,
       },
       responses: [mcqResponseSchema],
+      aiFeedBack: { type: String, required: true },
     },
   },
   { timestamps: true }
