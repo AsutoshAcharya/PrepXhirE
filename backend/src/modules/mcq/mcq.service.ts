@@ -4,6 +4,7 @@ import { InsertDto, ServiceResult } from "../../types/type";
 import { JobTitle } from "../../models/user.model";
 import { IMcqDocument } from "../../models/mcq.model";
 import Some from "../../utils/Some";
+import ErrorUtils from "../../utils/ErrorUtils";
 
 class McqService {
   private readonly mcqModel;
@@ -11,7 +12,7 @@ class McqService {
     this.mcqModel = mcqModel;
   }
 
-  async addBulkMcqs(
+  public async addBulkMcqs(
     mcqs: Array<InsertDto>
   ): Promise<ServiceResult<Array<IMcqDocument>>> {
     try {
@@ -26,18 +27,18 @@ class McqService {
     } catch (error) {
       return {
         success: false,
-        message: "Error creating MCQs",
+        message: ErrorUtils.getErrorMessage(error, "Error creating MCQs"),
       };
     }
   }
 
-  async getMcqsByJobTitle(
+  public async getMcqsByJobTitle(
     jobTitle: JobTitle,
     getCreatedById: boolean = false
   ): Promise<ServiceResult<Array<IMcqDocument>>> {
     try {
       const mcqs = await this.mcqModel.find(
-        { jobTitle: jobTitle },
+        { jobTitle: jobTitle, deletedById: null },
         getCreatedById ? { createdById: 1 } : { createdById: 0 }
       );
       return {
@@ -47,7 +48,59 @@ class McqService {
     } catch (error) {
       return {
         success: false,
-        message: "Error getting MCQs",
+        message: ErrorUtils.getErrorMessage(error, "Error getting MCQs"),
+      };
+    }
+  }
+
+  public async deleteMcqById(
+    id: string,
+    deletedById: Types.ObjectId
+  ): Promise<ServiceResult<string>> {
+    try {
+      const updated = await this.mcqModel.findByIdAndUpdate(
+        id,
+        { deletedById: deletedById },
+        { new: true }
+      );
+      if (updated)
+        return {
+          success: true,
+          data: id,
+        };
+      return {
+        success: false,
+        message: "Question not found",
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: ErrorUtils.getErrorMessage(error, "Error deleting mcq"),
+      };
+    }
+  }
+
+  public async updateMcqById(
+    id: string,
+    data: Partial<InsertDto>
+  ): Promise<ServiceResult<IMcqDocument>> {
+    try {
+      const updated = await this.mcqModel.findByIdAndUpdate(id, data, {
+        new: true,
+      });
+      if (updated)
+        return {
+          success: true,
+          data: updated,
+        };
+      return {
+        success: false,
+        message: "Question not found",
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: ErrorUtils.getErrorMessage(error, "Error updating mcq"),
       };
     }
   }

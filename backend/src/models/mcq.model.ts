@@ -48,6 +48,10 @@ const mcqSchema = new Schema(
       type: Types.ObjectId,
       required: false,
     },
+    deletedById: {
+      type: Types.ObjectId,
+      required: false,
+    },
   },
   { timestamps: true }
 );

@@ -21,9 +21,7 @@ class McqController {
   }
 
   public createMcq = async (req: CustomRequest, res: Response) => {
-    if (!req.user) {
-      return this.responseBuilder.unauthorized().send(res);
-    }
+    if (!req.user) return this.responseBuilder.unauthorized().send(res);
 
     const mcqs = Some.Array(req.body?.mcqs);
 
@@ -91,6 +89,54 @@ class McqController {
         .send(res);
     }
     return this.responseBuilder.serverError(serviceResult.message).send(res);
+  };
+
+  public deleteMcqById = async (req: CustomRequest, res: Response) => {
+    const id = Some.String(req.params.id);
+    if (!req.user) return this.responseBuilder.unauthorized().send(res);
+    if (!id) return this.responseBuilder.badRequest("Missing mcq id").send(res);
+
+    const serviceResult = await this.mcqService.deleteMcqById(id, req.user._id);
+
+    if (serviceResult.success)
+      return this.responseBuilder
+        .success({
+          message: "Question deleted successfully",
+          data: serviceResult.data,
+        })
+        .send(res);
+
+    return this.responseBuilder.serverError(serviceResult.message).send(res);
+  };
+
+  public updateMcqById = async (req: CustomRequest, res: Response) => {
+    const id = Some.String(req.params.id);
+    const mcq = Some.Object(req.body);
+    if (!req.user) return this.responseBuilder.unauthorized().send(res);
+    if (!id) return this.responseBuilder.badRequest("Missing mcq id").send(res);
+    const result = createMcqSchema
+      .partial()
+      .refine((data) => Object.keys(data).length > 0, {
+        message: "At least one field must be provided for update",
+      })
+      .safeParse(mcq);
+
+    if (result.success) {
+      const serviceResult = await this.mcqService.updateMcqById(
+        id,
+        result.data
+      );
+      if (serviceResult.success)
+        return this.responseBuilder
+          .success({
+            message: "Mcq updated successfully",
+            data: serviceResult.data,
+          })
+          .send(res);
+
+      return this.responseBuilder.serverError(serviceResult.message).send(res);
+    }
+    return this.responseBuilder.serverError("Invalid mcq data").send(res);
   };
 }
 

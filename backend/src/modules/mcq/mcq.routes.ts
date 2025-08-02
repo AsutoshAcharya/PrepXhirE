@@ -15,6 +15,16 @@ router
     ],
     controller.createMcq
   )
-  .get("/generate", authenticator.verifyToken, controller.generateMcq);
+  .get("/generate", authenticator.verifyToken, controller.generateMcq)
+  .post(
+    "/update/:id",
+    [authenticator.verifyToken, authenticator.isAdmin],
+    controller.updateMcqById
+  )
+  .delete(
+    "/delete/:id",
+    [authenticator.verifyToken, authenticator.isAdmin],
+    controller.deleteMcqById
+  );
 
 export default router;
