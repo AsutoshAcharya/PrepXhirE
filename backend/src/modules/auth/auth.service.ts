@@ -4,6 +4,8 @@ import { ServiceResult } from "../../types/type";
 import { LoginDto, RegisterDto } from "./auth.schema";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import ErrorUtils from "../../utils/ErrorUtils";
+
 type Result = Omit<IUserDocument, "password">;
 
 export default class AuthService {
@@ -54,7 +56,7 @@ export default class AuthService {
     } catch (error) {
       return {
         success: false,
-        message: "Sometbhing went wrong!",
+        message: ErrorUtils.getErrorMessage(error, "Sometbhing went wrong!"),
       };
     }
   }
@@ -87,7 +89,7 @@ export default class AuthService {
     } catch (error) {
       return {
         success: false,
-        message: "Something went wrong!",
+        message: ErrorUtils.getErrorMessage(error, "Something went wrong!"),
       };
     }
   }

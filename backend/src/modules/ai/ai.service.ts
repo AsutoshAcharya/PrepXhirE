@@ -12,6 +12,7 @@ import { Dependencies } from "../../container";
 import Some from "../../utils/Some";
 import pick from "../../utils/pick";
 import { Types } from "mongoose";
+import ErrorUtils from "../../utils/ErrorUtils";
 
 dotenv.config();
 class AiService {
@@ -141,8 +142,7 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
       console.error("Error generating AI response:", error);
       return {
         success: false,
-        message:
-          error instanceof Error ? error.message : "Unknown error occurred",
+        message: ErrorUtils.getErrorMessage(error, "Unknown error occurred"),
       };
     }
   }
