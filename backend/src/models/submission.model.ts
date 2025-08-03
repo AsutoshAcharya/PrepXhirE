@@ -11,17 +11,35 @@ export enum RoundType {
   Interview = "interview",
 }
 
-const mcqResponseSchema = new Schema({
-  questionId: {
-    type: Types.ObjectId,
-    required: true,
+const mcqResponseSchema = new Schema(
+  {
+    questionId: {
+      type: Types.ObjectId,
+      required: true,
+    },
+    selectedIndex: {
+      type: Number,
+      required: true,
+    },
+    isCorrect: Boolean,
   },
-  selectedIndex: {
-    type: Number,
-    required: true,
+  { _id: false }
+);
+
+const mcqDataSchema = new Schema(
+  {
+    score: {
+      type: Number,
+      required: true,
+    },
+    responses: [mcqResponseSchema],
+    aiFeedBack: {
+      type: String,
+      required: true,
+    },
   },
-  isCorrect: Boolean,
-});
+  { _id: false }
+);
 
 const submissionSchema = new Schema(
   {
@@ -53,14 +71,8 @@ const submissionSchema = new Schema(
       required: true,
     },
     mcqData: {
-      type: String,
+      type: mcqDataSchema,
       required: false,
-      score: {
-        type: Number,
-        required: true,
-      },
-      responses: [mcqResponseSchema],
-      aiFeedBack: { type: String, required: true },
     },
   },
   { timestamps: true }

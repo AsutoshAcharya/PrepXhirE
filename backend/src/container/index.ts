@@ -20,6 +20,7 @@ import {
   ISubmissionDocument,
   Submission as SubmissionModel,
 } from "../models/submission.model";
+import SubmissionService from "../modules/submission/submission.service";
 
 export interface Dependencies {
   authenticator: Authenticator;
@@ -30,6 +31,7 @@ export interface Dependencies {
   authService: AuthService;
   mcqService: McqService;
   aiService: AiService;
+  submissionService: SubmissionService;
 
   userModel: Model<IUserDocument>;
   mcqModel: Model<IMcqDocument>;
@@ -47,6 +49,7 @@ container.register({
   authService: asClass(AuthService).singleton(),
   mcqService: asClass(McqService).singleton(),
   aiService: asClass(AiService).singleton(),
+  submissionService: asClass(SubmissionService).singleton(),
 
   userModel: asValue(UserModel),
   mcqModel: asValue(McqModel),

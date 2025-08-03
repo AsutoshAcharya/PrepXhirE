@@ -4,6 +4,7 @@ import { JwtPayload } from "jsonwebtoken";
 import { CreateMcqDto } from "../modules/mcq/mcq.schema";
 import { Types } from "mongoose";
 import { Difficulty, QuestionSource } from "../models/mcq.model";
+import { Mode, RoundType } from "../models/submission.model";
 
 export type ResponseStruct = {
   success: boolean | null;
@@ -58,3 +59,17 @@ export type InsertResponseDto = Omit<
   AiFeedbackDto,
   "question" | "correctIndex" | "questionTopic"
 >;
+
+export type InsertSubmissionDto = {
+  sessionId?: Types.ObjectId;
+  candidateId: Types.ObjectId;
+  mode: Mode;
+  roundType: RoundType;
+  startedAt: Date;
+  endedAt: Date;
+  mcqData?: {
+    score: number;
+    responses: Array<InsertResponseDto>;
+    aiFeedBack: string;
+  };
+};
