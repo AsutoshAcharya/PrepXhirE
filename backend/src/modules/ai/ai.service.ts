@@ -140,17 +140,6 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
           questionCount
         );
 
-        // const response = await this.groq.chat.completions.create({
-        //   messages: [{ role: "user", content: prompt }],
-        //   model: "llama3-70b-8192",
-        //   max_tokens: 2048,
-        //   temperature: 0.8,
-        //   top_p: 1,
-        //   stream: false,
-        // });
-
-        // const rawContent = response.choices[0]?.message?.content;
-
         const rawContent = await this.getAiResponse(prompt);
 
         if (!rawContent) throw new Error("Empty response from AI.");
@@ -219,20 +208,9 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
   ): Promise<ServiceResult<string>> {
     try {
       const prompt = this.getMcqFeedbackPrompt(data);
-      // const response = await this.groq.chat.completions.create({
-      //   messages: [{ role: "user", content: prompt }],
-      //   model: "llama3-70b-8192",
-      //   max_tokens: 2048,
-      //   temperature: 0.8,
-      //   top_p: 1,
-      //   stream: false,
-      // });
-
-      // const rawContent = response.choices[0]?.message?.content;
-
       const rawContent = await this.getAiResponse(prompt);
-      console.log("rawContent", rawContent);
 
+      console.log("rawContent", rawContent);
       return {
         success: true,
         data: Some.String(rawContent),

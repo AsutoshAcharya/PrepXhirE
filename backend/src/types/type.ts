@@ -54,4 +54,7 @@ export type AiFeedbackDto = {
   questionTopic: string;
 };
 
-export type InsertResponseDto = Omit<AiFeedbackDto, "question">;
+export type InsertResponseDto = Omit<
+  AiFeedbackDto,
+  "question" | "correctIndex" | "questionTopic"
+>;

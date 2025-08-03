@@ -20,10 +20,6 @@ const mcqResponseSchema = new Schema({
     type: Number,
     required: true,
   },
-  correctIndex: {
-    type: Number,
-    required: true,
-  },
   isCorrect: Boolean,
 });
 
