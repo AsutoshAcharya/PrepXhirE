@@ -25,6 +25,7 @@ router
     "/delete/:id",
     [authenticator.verifyToken, authenticator.isAdmin],
     controller.deleteMcqById
-  );
+  )
+  .post("/submit", authenticator.verifyToken, controller.submitMcq);
 
 export default router;

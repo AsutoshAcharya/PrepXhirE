@@ -52,6 +52,10 @@ const mcqSchema = new Schema(
       type: Types.ObjectId,
       required: false,
     },
+    questionTopic: {
+      type: String,
+      required: true,
+    },
   },
   { timestamps: true }
 );

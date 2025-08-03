@@ -104,6 +104,23 @@ class McqService {
       };
     }
   }
+
+  public async getBulkMcqsByIds(
+    ids: Array<Types.ObjectId>
+  ): Promise<ServiceResult<Array<IMcqDocument>>> {
+    try {
+      const mcqs = await this.mcqModel.find({ _id: { $in: ids } });
+      return {
+        success: true,
+        data: mcqs,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: ErrorUtils.getErrorMessage(error, "Something went wrong!"),
+      };
+    }
+  }
 }
 
 export default McqService;

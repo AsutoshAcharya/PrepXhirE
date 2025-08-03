@@ -32,6 +32,7 @@ export interface CustomRequest extends Request {
 export type InsertDto = CreateMcqDto & {
   createdById?: Types.ObjectId;
   source: QuestionSource;
+  questionTopic: string;
 };
 
 export type GenerateMcqDto = {
@@ -43,3 +44,14 @@ export type GenerateMcqDto = {
   saveToDb?: boolean;
   questionCount?: number;
 };
+
+export type AiFeedbackDto = {
+  question: string;
+  questionId: Types.ObjectId;
+  selectedIndex: number;
+  correctIndex: number;
+  isCorrect: boolean;
+  questionTopic: string;
+};
+
+export type InsertResponseDto = Omit<AiFeedbackDto, "question">;

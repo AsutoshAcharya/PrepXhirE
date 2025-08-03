@@ -60,7 +60,7 @@ const submissionSchema = new Schema(
       type: String,
       required: false,
       score: {
-        type: String,
+        type: Number,
         required: true,
       },
       responses: [mcqResponseSchema],

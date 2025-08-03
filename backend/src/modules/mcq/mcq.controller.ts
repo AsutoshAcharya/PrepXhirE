@@ -1,36 +1,44 @@
 import { Response } from "express";
 import { Dependencies } from "../../container";
-import { CustomRequest, GenerateMcqDto, InsertDto } from "../../types/type";
+import {
+  AiFeedbackDto,
+  CustomRequest,
+  GenerateMcqDto,
+  InsertDto,
+  InsertResponseDto,
+} from "../../types/type";
 import McqService from "./mcq.service";
 import {
   CreateMcqDto,
   createMcqSchema,
   generateMcqQuerySchema,
+  submitSchema,
 } from "./mcq.schema";
 import ResponseBuilder from "../../utils/ResponseBuilder";
 import { Difficulty, QuestionSource } from "../../models/mcq.model";
 import Some from "../../utils/Some";
 import { Types } from "mongoose";
 import { JobTitle, UserRole } from "../../models/user.model";
-
+import toMongoObjectId from "../../utils/toMongoObjectId";
+import moment from "moment";
 class McqController {
   private readonly mcqService: McqService;
-  private readonly responseBuilder;
+  private readonly rb;
   private readonly aiService;
   constructor({ mcqService, aiService }: Dependencies) {
     this.mcqService = mcqService;
     this.aiService = aiService;
 
-    this.responseBuilder = new ResponseBuilder({ type: "mcq" });
+    this.rb = new ResponseBuilder({ type: "mcq" });
   }
 
   public createMcq = async (req: CustomRequest, res: Response) => {
-    if (!req.user) return this.responseBuilder.unauthorized().send(res);
+    if (!req.user) return this.rb.unauthorized().send(res);
 
     const mcqs = Some.Array(req.body?.mcqs);
 
     if (mcqs.length === 0) {
-      return this.responseBuilder.badRequest("No MCQs provided").send(res);
+      return this.rb.badRequest("No MCQs provided").send(res);
     }
 
     const parsedMcqs: Array<InsertDto> = [];
@@ -38,24 +46,23 @@ class McqController {
       const result = createMcqSchema.safeParse(mcq);
       if (!result.success) {
         // console.log(result.error);
-        return this.responseBuilder
-          .badRequest("Invalid mcq question")
-          .send(res);
+        return this.rb.badRequest("Invalid mcq question").send(res);
       }
       parsedMcqs.push({
         ...result.data,
         createdById: req.user._id,
         source: QuestionSource.interviewer,
+        questionTopic: Some.String(),
       });
     }
 
     const serviceResult = await this.mcqService.addBulkMcqs(parsedMcqs);
 
     if (!serviceResult.success) {
-      return this.responseBuilder.badRequest(serviceResult.message).send(res);
+      return this.rb.badRequest(serviceResult.message).send(res);
     }
 
-    return this.responseBuilder
+    return this.rb
       .success({
         message: "MCQs created successfully",
         data: serviceResult.data,
@@ -69,7 +76,7 @@ class McqController {
     //   "Teamwork & Collaboration",
     // ];
 
-    if (!req.user) return this.responseBuilder.unauthorized().send(res);
+    if (!req.user) return this.rb.unauthorized().send(res);
     //topics will be based on skills ,send comma separated values
     const { difficulty, jobRole, skills, questionCount } = req.query;
 
@@ -81,8 +88,7 @@ class McqController {
     };
     console.log(queryData);
     const result = generateMcqQuerySchema.safeParse(queryData);
-    if (!result.success)
-      return this.responseBuilder.badRequest("Invalid queries").send(res);
+    if (!result.success) return this.rb.badRequest("Invalid queries").send(res);
     console.log(result.data);
 
     const generateMcqDto: GenerateMcqDto = {
@@ -98,39 +104,39 @@ class McqController {
       await this.aiService.generateMcqQuestions(generateMcqDto);
 
     if (serviceResult.success) {
-      return this.responseBuilder
+      return this.rb
         .success({
           message: "Questions Generated",
           data: serviceResult.data,
         })
         .send(res);
     }
-    return this.responseBuilder.serverError(serviceResult.message).send(res);
+    return this.rb.serverError(serviceResult.message).send(res);
   };
 
   public deleteMcqById = async (req: CustomRequest, res: Response) => {
     const id = Some.String(req.params.id);
-    if (!req.user) return this.responseBuilder.unauthorized().send(res);
-    if (!id) return this.responseBuilder.badRequest("Missing mcq id").send(res);
+    if (!req.user) return this.rb.unauthorized().send(res);
+    if (!id) return this.rb.badRequest("Missing mcq id").send(res);
 
     const serviceResult = await this.mcqService.deleteMcqById(id, req.user._id);
 
     if (serviceResult.success)
-      return this.responseBuilder
+      return this.rb
         .success({
           message: "Question deleted successfully",
           data: serviceResult.data,
         })
         .send(res);
 
-    return this.responseBuilder.serverError(serviceResult.message).send(res);
+    return this.rb.serverError(serviceResult.message).send(res);
   };
 
   public updateMcqById = async (req: CustomRequest, res: Response) => {
     const id = Some.String(req.params.id);
     const mcq = Some.Object(req.body);
-    if (!req.user) return this.responseBuilder.unauthorized().send(res);
-    if (!id) return this.responseBuilder.badRequest("Missing mcq id").send(res);
+    if (!req.user) return this.rb.unauthorized().send(res);
+    if (!id) return this.rb.badRequest("Missing mcq id").send(res);
     const result = createMcqSchema
       .partial()
       .refine((data) => Object.keys(data).length > 0, {
@@ -144,16 +150,66 @@ class McqController {
         result.data
       );
       if (serviceResult.success)
-        return this.responseBuilder
+        return this.rb
           .success({
             message: "Mcq updated successfully",
             data: serviceResult.data,
           })
           .send(res);
 
-      return this.responseBuilder.serverError(serviceResult.message).send(res);
+      return this.rb.serverError(serviceResult.message).send(res);
     }
-    return this.responseBuilder.serverError("Invalid mcq data").send(res);
+    return this.rb.serverError("Invalid mcq data").send(res);
+  };
+
+  public submitMcq = async (req: CustomRequest, res: Response) => {
+    if (!req.user) return this.rb.unauthorized().send(res);
+    const userId = req.user._id;
+    const result = submitSchema.safeParse(req.body);
+
+    if (result.success) {
+      const endedAt = moment.utc();
+      const startedAt = endedAt
+        .clone()
+        .subtract(result.data.timeTaken, "minutes");
+
+      console.log(endedAt.toISOString());
+      console.log(startedAt.toISOString());
+
+      const questionIds = result.data.responses.map((r) =>
+        toMongoObjectId(r.questionId)
+      );
+      const serviceResult = await this.mcqService.getBulkMcqsByIds(questionIds);
+      if (serviceResult.success) {
+        const insertResponseData: Array<AiFeedbackDto> = [];
+        console.log(serviceResult.data, result.data.responses);
+        serviceResult.data.forEach(
+          ({ correctIndex, _id, question, questionTopic }) => {
+            const userResponse = result.data.responses.find(
+              (r) => r.questionId === _id.toString()
+            );
+            console.log("userResponse", userResponse);
+            const selectedIndex = Some.Number(userResponse?.selectedIndex);
+
+            insertResponseData.push({
+              question,
+              questionId: _id,
+              selectedIndex,
+              correctIndex: correctIndex,
+              isCorrect: selectedIndex === correctIndex,
+              questionTopic,
+            });
+          }
+        );
+
+        console.log(insertResponseData);
+        const aiService =
+          await this.aiService.getMcqFeedBack(insertResponseData);
+        return;
+      }
+      return this.rb.serverError(serviceResult.message).send(res);
+    }
+    return this.rb.badRequest("Invalid payload").send(res);
   };
 }
 

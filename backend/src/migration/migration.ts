@@ -6,8 +6,8 @@ async function migrate() {
   await mongoose.connect(process.env.MONGO_URI as string);
 
   const result = await McqQuestion.updateMany(
-    { deletedById: { $exists: false } },
-    { $set: { deletedById: null } }
+    { questionTopic: { $exists: false } },
+    { $set: { questionTopic: "" } }
   );
 
   console.log(`Updated ${result.modifiedCount} documents`);

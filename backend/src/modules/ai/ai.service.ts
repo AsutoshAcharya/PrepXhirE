@@ -6,7 +6,12 @@ import {
   IMcqDocument,
   QuestionSource,
 } from "../../models/mcq.model";
-import { GenerateMcqDto, InsertDto, ServiceResult } from "../../types/type";
+import {
+  AiFeedbackDto,
+  GenerateMcqDto,
+  InsertDto,
+  ServiceResult,
+} from "../../types/type";
 import { Dependencies } from "../../container";
 
 import Some from "../../utils/Some";
@@ -34,7 +39,7 @@ class AiService {
     existingMcqs?: Array<string>,
     questionCount: number = 5
   ): string {
-    return `Generate ${questionCount} multiple-choice questions for the role of "${jobTitle}", focused on: ${topics.join(", ")}.
+    return `Generate ${1} multiple-choice questions for the role of "${jobTitle}", focused on: ${topics.join(", ")}.
 Difficulty: ${difficulty}.
 
 Requirements:
@@ -47,11 +52,70 @@ Requirements:
   "question": "string",
   "options": ["string", "string", "string", "string"],
   "correctIndex": 0,
-  "explanation": "string"
+  "explanation": "string",
+  "questionTopic":"string"
 }
 
 Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, or explanation.
 `;
+  }
+
+  public getMcqFeedbackPrompt(data: Array<AiFeedbackDto>): string {
+    let corectMcqs: Array<AiFeedbackDto> = [];
+    let incorrectMcqs: Array<AiFeedbackDto> = [];
+    data.forEach((d) => {
+      if (d.isCorrect) corectMcqs.push(d);
+      else incorrectMcqs.push(d);
+    });
+
+    const correctItems = data.filter((item) => item.isCorrect);
+
+    const topicStats = (items: typeof data) => {
+      const topicCount: Record<string, number> = {};
+      items.forEach((item) => {
+        topicCount[item.questionTopic.toLowerCase()] =
+          (topicCount[item.questionTopic.toLowerCase()] || 0) + 1;
+      });
+      return topicCount;
+    };
+
+    const strengths = topicStats(correctItems);
+    const weaknesses = topicStats(incorrectMcqs);
+
+    const summarizeTopics = (topics: Record<string, number>) => {
+      const entries = Object.entries(topics);
+      return entries.length === 0
+        ? "None"
+        : entries
+            .sort((a, b) => b[1] - a[1])
+            .map(([topic, count]) => `${topic} (${count})`)
+            .join(", ");
+    };
+
+    const intro = `Analyze the user's performance on a multiple-choice quiz. Provide a brief summary of their overall performance, including areas of strength and areas to improve. Keep the tone encouraging and professional.\n\n`;
+
+    const summaryData =
+      `Total Questions: ${data.length}\n` +
+      `Correct Answers: ${corectMcqs.length}\n` +
+      `Incorrect Answers: ${incorrectMcqs.length}\n` +
+      `Strong Topics: ${summarizeTopics(strengths)}\n` +
+      `Needs Improvement: ${summarizeTopics(weaknesses)}\n`;
+
+    return intro + summaryData;
+  }
+
+  public async getAiResponse(prompt: string): Promise<string> {
+    const response = await this.groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama3-70b-8192",
+      max_tokens: 2048,
+      temperature: 0.8,
+      top_p: 1,
+      stream: false,
+    });
+
+    const rawContent = response.choices[0]?.message?.content;
+    return Some.String(rawContent);
   }
 
   public async generateMcqQuestions({
@@ -76,16 +140,18 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
           questionCount
         );
 
-        const response = await this.groq.chat.completions.create({
-          messages: [{ role: "user", content: prompt }],
-          model: "llama3-70b-8192",
-          max_tokens: 2048,
-          temperature: 0.8,
-          top_p: 1,
-          stream: false,
-        });
+        // const response = await this.groq.chat.completions.create({
+        //   messages: [{ role: "user", content: prompt }],
+        //   model: "llama3-70b-8192",
+        //   max_tokens: 2048,
+        //   temperature: 0.8,
+        //   top_p: 1,
+        //   stream: false,
+        // });
 
-        const rawContent = response.choices[0]?.message?.content;
+        // const rawContent = response.choices[0]?.message?.content;
+
+        const rawContent = await this.getAiResponse(prompt);
 
         if (!rawContent) throw new Error("Empty response from AI.");
 
@@ -109,6 +175,7 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
             explanation: Some.String(mcq?.explanation),
             source: QuestionSource.ai,
             createdById: createdById,
+            questionTopic: Some.String(mcq?.questionTopic),
           };
           insertMcqData.push(insertData);
         });
@@ -143,6 +210,37 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
       return {
         success: false,
         message: ErrorUtils.getErrorMessage(error, "Unknown error occurred"),
+      };
+    }
+  }
+
+  public async getMcqFeedBack(
+    data: Array<AiFeedbackDto>
+  ): Promise<ServiceResult<string>> {
+    try {
+      const prompt = this.getMcqFeedbackPrompt(data);
+      // const response = await this.groq.chat.completions.create({
+      //   messages: [{ role: "user", content: prompt }],
+      //   model: "llama3-70b-8192",
+      //   max_tokens: 2048,
+      //   temperature: 0.8,
+      //   top_p: 1,
+      //   stream: false,
+      // });
+
+      // const rawContent = response.choices[0]?.message?.content;
+
+      const rawContent = await this.getAiResponse(prompt);
+      console.log("rawContent", rawContent);
+
+      return {
+        success: true,
+        data: Some.String(rawContent),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: ErrorUtils.getErrorMessage(error, "Error generating feedback"),
       };
     }
   }
