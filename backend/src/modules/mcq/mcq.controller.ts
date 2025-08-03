@@ -247,6 +247,22 @@ class McqController {
     }
     return this.rb.badRequest("Invalid payload").send(res);
   };
+
+  public deleteSubmission = async (req: CustomRequest, res: Response) => {
+    if (!req.user) return this.rb.unauthorized().send(res);
+    const submissionId = Some.String(req.params.id);
+    const serviceResult =
+      await this.submissionService.deleteSubmission(submissionId);
+    if (serviceResult.success)
+      return this.rb
+        .success({
+          message: "Submission deleted successfully",
+          data: serviceResult.data,
+        })
+        .send(res);
+
+    return this.rb.serverError(serviceResult.message).send(res);
+  };
 }
 
 export default McqController;

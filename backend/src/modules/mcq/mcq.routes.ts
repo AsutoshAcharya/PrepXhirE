@@ -27,6 +27,11 @@ router
     [authenticator.verifyToken, authenticator.isAdmin],
     controller.deleteMcqById
   )
-  .post("/submit", authenticator.verifyToken, controller.submitMcq);
+  .post("/submit", authenticator.verifyToken, controller.submitMcq)
+  .delete(
+    "/submission/:id",
+    [authenticator.verifyToken, authenticator.isAdmin],
+    controller.deleteSubmission
+  );
 
 export default router;

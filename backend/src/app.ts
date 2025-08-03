@@ -1,13 +1,19 @@
-import express, { Express } from "express";
+import express, { Express, NextFunction, Request, Response } from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
-import mongoose from "mongoose";
+
 import dotenv from "dotenv";
 import authRoutes from "./modules/auth/auth.routes";
 import mcqRoutes from "./modules/mcq/mcq.routes";
 import connectToDb from "./config/db";
 
 dotenv.config();
+
+// let maxToken = 10;
+// setInterval(() => {
+//   maxToken = 10;
+//   console.log(maxToken);
+// }, 60000);
 
 class App {
   private app: Express;
@@ -24,6 +30,12 @@ class App {
   private setupMiddlewares() {
     this.app.use(cors());
     this.app.use(bodyParser.json());
+    // this.app.use("/", (req: Request, res: Response, next: NextFunction) => {
+    //   console.log(req.ip);
+    //   if (maxToken === 0) return res.status(409).send("Too many requests");
+    //   maxToken--;
+    //   next();
+    // });
   }
 
   private setupRoutes() {
