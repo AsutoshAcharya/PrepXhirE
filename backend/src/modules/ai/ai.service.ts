@@ -16,7 +16,6 @@ import { Dependencies } from "../../container";
 
 import Some from "../../utils/Some";
 import pick from "../../utils/pick";
-import { Types } from "mongoose";
 import ErrorUtils from "../../utils/ErrorUtils";
 
 dotenv.config();
@@ -32,7 +31,7 @@ class AiService {
     });
   }
 
-  public getMcqPrompt(
+  private getMcqPrompt(
     jobTitle: JobTitle,
     difficulty: Difficulty,
     topics: string[],
@@ -60,7 +59,7 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
 `;
   }
 
-  public getMcqFeedbackPrompt(data: Array<AiFeedbackDto>): string {
+  private getMcqFeedbackPrompt(data: Array<AiFeedbackDto>): string {
     let corectMcqs: Array<AiFeedbackDto> = [];
     let incorrectMcqs: Array<AiFeedbackDto> = [];
     data.forEach((d) => {
