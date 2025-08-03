@@ -1,6 +1,7 @@
-import { Request, Response, Router } from "express";
+import { Router } from "express";
 import container from "../../container";
 import { UserRole } from "../../models/user.model";
+
 const controller = container.resolve("mcqController");
 const authenticator = container.resolve("authenticator");
 

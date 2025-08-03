@@ -1,22 +1,23 @@
 import { NextFunction, Response } from "express";
 import jwt from "jsonwebtoken";
 import { CustomRequest, JwtDecodeData } from "../types/type";
-
 import ResponseBuilder from "../utils/ResponseBuilder";
 import Some from "../utils/Some";
 import { Dependencies } from "../container";
 import { UserRole } from "../models/user.model";
 
 class Authenticator {
-  private readonly unauthorizedMessage =
-    "You are not authorized for this action";
   private readonly userModel;
   private readonly rb;
+  private readonly unauthorizedMessage =
+    "You are not authorized for this action";
+
   constructor({ userModel }: Dependencies) {
     this.userModel = userModel;
     this.rb = new ResponseBuilder({ type: "verify-user" });
   }
-  public verifyToken = (
+
+  public verifyToken = async (
     req: CustomRequest,
     res: Response,
     next: NextFunction
@@ -37,9 +38,7 @@ class Authenticator {
         const { id } = decoded as JwtDecodeData;
         const user = await this.userModel.findById(id);
 
-        if (!user) {
-          return this.rb.notFound().send(res);
-        }
+        if (!user) return this.rb.notFound("User not found").send(res);
 
         req.user = user;
         next();
@@ -49,32 +48,19 @@ class Authenticator {
     }
   };
 
-  public isInterviewer = (
-    req: CustomRequest,
-    res: Response,
-    next: NextFunction
-  ) => {
-    if (!req.user || req.user.role !== UserRole.Interviewer)
-      return this.rb.unauthorized(this.unauthorizedMessage).send(res);
-
-    next();
-  };
-
-  public isAdmin = (req: CustomRequest, res: Response, next: NextFunction) => {
-    if (!req.user || req.user.role !== UserRole.Admin)
-      return this.rb.unauthorized(this.unauthorizedMessage).send(res);
-
-    next();
-  };
-
   public hasRole = (...allowedRoles: UserRole[]) => {
     return (req: CustomRequest, res: Response, next: NextFunction) => {
-      if (!req.user || !allowedRoles.includes(req.user.role))
+      if (!req.user || !allowedRoles.includes(req.user.role)) {
         return this.rb.unauthorized(this.unauthorizedMessage).send(res);
+      }
 
       next();
     };
   };
+
+  public isInterviewer = this.hasRole(UserRole.Interviewer);
+
+  public isAdmin = this.hasRole(UserRole.Admin);
 }
 
 export default Authenticator;

@@ -39,7 +39,7 @@ class AiService {
     existingMcqs?: Array<string>,
     questionCount: number = 5
   ): string {
-    return `Generate ${1} multiple-choice questions for the role of "${jobTitle}", focused on: ${topics.join(", ")}.
+    return `Generate ${questionCount} multiple-choice questions for the role of "${jobTitle}", focused on: ${topics.join(", ")}.
 Difficulty: ${difficulty}.
 
 Requirements:

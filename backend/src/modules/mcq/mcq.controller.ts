@@ -5,12 +5,10 @@ import {
   CustomRequest,
   GenerateMcqDto,
   InsertDto,
-  InsertResponseDto,
   InsertSubmissionDto,
 } from "../../types/type";
 import McqService from "./mcq.service";
 import {
-  CreateMcqDto,
   createMcqSchema,
   generateMcqQuerySchema,
   submitSchema,
@@ -18,12 +16,12 @@ import {
 import ResponseBuilder from "../../utils/ResponseBuilder";
 import { Difficulty, QuestionSource } from "../../models/mcq.model";
 import Some from "../../utils/Some";
-import { Types } from "mongoose";
-import { JobTitle, UserRole } from "../../models/user.model";
+import { JobTitle } from "../../models/user.model";
 import toMongoObjectId from "../../utils/toMongoObjectId";
 import moment from "moment";
 import { RoundType } from "../../models/submission.model";
 import pick from "../../utils/pick";
+
 class McqController {
   private readonly mcqService: McqService;
   private readonly rb;
@@ -169,7 +167,7 @@ class McqController {
 
   public submitMcq = async (req: CustomRequest, res: Response) => {
     if (!req.user) return this.rb.unauthorized().send(res);
-    const userId = req.user._id;
+
     const result = submitSchema.safeParse(req.body);
 
     if (result.success) {
@@ -177,9 +175,6 @@ class McqController {
       const startedAt = endedAt
         .clone()
         .subtract(result.data.timeTaken, "minutes");
-
-      console.log(endedAt.toISOString());
-      console.log(startedAt.toISOString());
 
       const questionIds = result.data.responses.map((r) =>
         toMongoObjectId(r.questionId)
