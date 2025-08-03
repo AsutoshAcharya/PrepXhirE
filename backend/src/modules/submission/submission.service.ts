@@ -9,17 +9,19 @@ class SubmissionService {
     this.submissionModel = submissionModel;
   }
 
-  public async insertBulkSubmission(
-    data: Array<InsertSubmissionDto>
-  ): Promise<ServiceResult<Array<ISubmissionDocument>>> {
+  public async insertSubmission(
+    data: InsertSubmissionDto
+  ): Promise<ServiceResult<ISubmissionDocument>> {
     try {
-      const submissions = await this.submissionModel.insertMany(data);
-      if (submissions.length > 0) {
+      const submission = await this.submissionModel.insertOne(data);
+
+      if (submission) {
         return {
           success: true,
-          data: submissions as Array<ISubmissionDocument>,
+          data: submission,
         };
       }
+
       return {
         success: false,
         message: "Error adding submissions",

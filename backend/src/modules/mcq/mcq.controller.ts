@@ -6,6 +6,7 @@ import {
   GenerateMcqDto,
   InsertDto,
   InsertResponseDto,
+  InsertSubmissionDto,
 } from "../../types/type";
 import McqService from "./mcq.service";
 import {
@@ -21,13 +22,17 @@ import { Types } from "mongoose";
 import { JobTitle, UserRole } from "../../models/user.model";
 import toMongoObjectId from "../../utils/toMongoObjectId";
 import moment from "moment";
+import { RoundType } from "../../models/submission.model";
+import pick from "../../utils/pick";
 class McqController {
   private readonly mcqService: McqService;
   private readonly rb;
   private readonly aiService;
-  constructor({ mcqService, aiService }: Dependencies) {
+  private readonly submissionService;
+  constructor({ mcqService, aiService, submissionService }: Dependencies) {
     this.mcqService = mcqService;
     this.aiService = aiService;
+    this.submissionService = submissionService;
 
     this.rb = new ResponseBuilder({ type: "mcq" });
   }
@@ -180,8 +185,9 @@ class McqController {
         toMongoObjectId(r.questionId)
       );
       const serviceResult = await this.mcqService.getBulkMcqsByIds(questionIds);
+
       if (serviceResult.success) {
-        const insertResponseData: Array<AiFeedbackDto> = [];
+        const aiFeedBackData: Array<AiFeedbackDto> = [];
         console.log(serviceResult.data, result.data.responses);
         serviceResult.data.forEach(
           ({ correctIndex, _id, question, questionTopic }) => {
@@ -191,7 +197,7 @@ class McqController {
             console.log("userResponse", userResponse);
             const selectedIndex = Some.Number(userResponse?.selectedIndex);
 
-            insertResponseData.push({
+            aiFeedBackData.push({
               question,
               questionId: _id,
               selectedIndex,
@@ -202,10 +208,43 @@ class McqController {
           }
         );
 
-        console.log(insertResponseData);
-        const aiService =
-          await this.aiService.getMcqFeedBack(insertResponseData);
-        return;
+        // console.log(aiFeedBackData);
+        const aiServiceResult =
+          await this.aiService.getMcqFeedBack(aiFeedBackData);
+        let aiFeedBack = "";
+        if (aiServiceResult.success) aiFeedBack = aiServiceResult.data;
+        const parsedData = result.data;
+
+        const insertSubmissionData: InsertSubmissionDto = {
+          ...(parsedData.sessionId && {
+            sessionId: toMongoObjectId(parsedData.sessionId),
+          }),
+          candidateId: req.user._id,
+          mode: parsedData.mode,
+          roundType: RoundType.Mcq,
+          startedAt: startedAt.toDate(),
+          endedAt: endedAt.toDate(),
+          mcqData: {
+            score: aiFeedBackData.filter((r) => r.isCorrect).length,
+            responses: aiFeedBackData.map((r) =>
+              pick(r, "questionId", "selectedIndex", "isCorrect")
+            ),
+            aiFeedBack,
+          },
+        };
+
+        const insertSubmissionServiceResult =
+          await this.submissionService.insertSubmission(insertSubmissionData);
+
+        if (insertSubmissionServiceResult.success)
+          return this.rb.success({
+            message: "Submission successful",
+            data: insertSubmissionServiceResult.data,
+          });
+
+        return this.rb
+          .serverError(insertSubmissionServiceResult.message)
+          .send(res);
       }
       return this.rb.serverError(serviceResult.message).send(res);
     }
