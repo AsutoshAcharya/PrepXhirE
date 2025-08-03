@@ -237,10 +237,12 @@ class McqController {
           await this.submissionService.insertSubmission(insertSubmissionData);
 
         if (insertSubmissionServiceResult.success)
-          return this.rb.success({
-            message: "Submission successful",
-            data: insertSubmissionServiceResult.data,
-          });
+          return this.rb
+            .success({
+              message: "Submission successful",
+              data: insertSubmissionServiceResult.data,
+            })
+            .send(res);
 
         return this.rb
           .serverError(insertSubmissionServiceResult.message)
