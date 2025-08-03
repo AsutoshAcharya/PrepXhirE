@@ -68,8 +68,6 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
       else incorrectMcqs.push(d);
     });
 
-    const correctItems = data.filter((item) => item.isCorrect);
-
     const topicStats = (items: typeof data) => {
       const topicCount: Record<string, number> = {};
       items.forEach((item) => {
@@ -79,7 +77,7 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
       return topicCount;
     };
 
-    const strengths = topicStats(correctItems);
+    const strengths = topicStats(corectMcqs);
     const weaknesses = topicStats(incorrectMcqs);
 
     const summarizeTopics = (topics: Record<string, number>) => {
