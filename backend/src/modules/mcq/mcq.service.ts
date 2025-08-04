@@ -34,11 +34,12 @@ class McqService {
 
   public async getMcqsByJobTitle(
     jobTitle: JobTitle,
+    createdById?: Types.ObjectId,
     getCreatedById: boolean = false
   ): Promise<ServiceResult<Array<IMcqDocument>>> {
     try {
       const mcqs = await this.mcqModel.find(
-        { jobTitle: jobTitle, deletedById: null },
+        { jobTitle: jobTitle, deletedById: null, createdById },
         getCreatedById ? { createdById: 1 } : { createdById: 0 }
       );
       return {

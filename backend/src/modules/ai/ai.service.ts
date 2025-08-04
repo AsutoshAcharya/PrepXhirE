@@ -125,7 +125,10 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
     questionCount,
   }: GenerateMcqDto): Promise<ServiceResult<Array<Partial<IMcqDocument>>>> {
     try {
-      const serviceResult = await this.mcqService.getMcqsByJobTitle(jobTitle);
+      const serviceResult = await this.mcqService.getMcqsByJobTitle(
+        jobTitle,
+        createdById
+      );
       if (serviceResult.success) {
         const existingQuestions = serviceResult.data.map((d) => d.question);
 
