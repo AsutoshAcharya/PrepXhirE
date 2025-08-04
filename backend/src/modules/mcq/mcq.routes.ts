@@ -17,7 +17,7 @@ router
     controller.createMcq
   )
   .get("/generate", authenticator.verifyToken, controller.generateMcq)
-  .post(
+  .patch(
     "/update/:id",
     [authenticator.verifyToken, authenticator.isAdmin],
     controller.updateMcqById
