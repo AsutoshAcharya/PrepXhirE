@@ -55,7 +55,7 @@ class McqController {
       parsedMcqs.push({
         ...result.data,
         createdById: req.user._id,
-        source: QuestionSource.interviewer,
+        source: QuestionSource.Interviewer,
         questionTopic: Some.String(),
       });
     }

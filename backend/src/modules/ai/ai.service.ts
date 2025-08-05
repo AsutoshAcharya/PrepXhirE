@@ -159,7 +159,7 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
             options: Some.Array(mcq?.options),
             correctIndex: Some.Number(mcq?.correctIndex),
             explanation: Some.String(mcq?.explanation),
-            source: QuestionSource.ai,
+            source: QuestionSource.Ai,
             createdById: createdById,
             questionTopic: Some.String(mcq?.questionTopic),
           };

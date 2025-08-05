@@ -73,7 +73,7 @@ const hostedSessionSchema = new Schema(
         status: {
           type: String,
           enum: Object.values(CandidateStatus),
-          default: CandidateStatus.INVITED,
+          default: CandidateStatus.Invited,
           required: true,
         },
         score: Number,

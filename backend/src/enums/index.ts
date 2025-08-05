@@ -7,22 +7,22 @@ export enum CollectionNames {
 }
 
 export enum CandidateStatus {
-  INVITED = "invited",
-  IN_PROGRESS = "in_progress",
-  COMPLETED = "completed",
-  DISQUALIFIED = "disqualified",
-  SHORTLISTED = "shortlisted",
+  Invited = "invited",
+  In_Progress = "in_progress",
+  Completed = "completed",
+  Disqualified = "disqualified",
+  Shortlisted = "shortlisted",
 }
 
 export enum Difficulty {
-  easy = "easy",
-  medium = "medium",
-  hard = "hard",
+  Easy = "easy",
+  Medium = "medium",
+  Hard = "hard",
 }
 
 export enum QuestionSource {
-  ai = "ai",
-  interviewer = "interviewer",
+  Ai = "ai",
+  Interviewer = "interviewer",
 }
 
 export enum Mode {
