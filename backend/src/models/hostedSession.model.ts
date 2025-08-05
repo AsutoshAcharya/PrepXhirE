@@ -1,7 +1,7 @@
 import { InferSchemaType, model, Schema, Types } from "mongoose";
-import { JobTitle } from "./user.model";
+
 import { isFuture, isToday } from "date-fns";
-import { CandidateStatus, CollectionNames } from "../enums";
+import { CandidateStatus, CollectionNames, JobTitle } from "../enums";
 
 //only interviewer cah host
 const hostedSessionSchema = new Schema(

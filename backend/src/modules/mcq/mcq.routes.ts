@@ -1,6 +1,6 @@
 import { Router } from "express";
 import container from "../../container";
-import { UserRole } from "../../models/user.model";
+import { UserRole } from "../../enums";
 
 const controller = container.resolve("mcqController");
 const authenticator = container.resolve("authenticator");

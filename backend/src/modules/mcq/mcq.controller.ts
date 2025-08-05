@@ -16,12 +16,11 @@ import {
 import ResponseBuilder from "../../utils/ResponseBuilder";
 
 import Some from "../../utils/Some";
-import { JobTitle } from "../../models/user.model";
 import toMongoObjectId from "../../utils/toMongoObjectId";
 import moment from "moment";
 
 import pick from "../../utils/pick";
-import { Difficulty, QuestionSource, RoundType } from "../../enums";
+import { Difficulty, JobTitle, QuestionSource, RoundType } from "../../enums";
 
 class McqController {
   private readonly mcqService: McqService;

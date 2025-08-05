@@ -1,10 +1,10 @@
 import { Types } from "mongoose";
 import { Dependencies } from "../../container";
 import { InsertDto, ServiceResult } from "../../types/type";
-import { JobTitle } from "../../models/user.model";
 import { IMcqDocument } from "../../models/mcq.model";
 import Some from "../../utils/Some";
 import ErrorUtils from "../../utils/ErrorUtils";
+import { JobTitle } from "../../enums";
 
 class McqService {
   private readonly mcqModel;

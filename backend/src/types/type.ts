@@ -1,11 +1,18 @@
 import { Request } from "express";
-import { IUserDocument, JobTitle, UserRole } from "../models/user.model";
+import { IUserDocument } from "../models/user.model";
 import { JwtPayload } from "jsonwebtoken";
 import { CreateMcqDto } from "../modules/mcq/mcq.schema";
 import { Types } from "mongoose";
 import { IMcqDocument } from "../models/mcq.model";
 
-import { Difficulty, Mode, QuestionSource, RoundType } from "../enums";
+import {
+  Difficulty,
+  JobTitle,
+  Mode,
+  QuestionSource,
+  RoundType,
+  UserRole,
+} from "../enums";
 
 export type ResponseStruct = {
   success: boolean | null;

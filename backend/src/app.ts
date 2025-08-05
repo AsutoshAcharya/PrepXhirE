@@ -5,6 +5,7 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import authRoutes from "./modules/auth/auth.routes";
 import mcqRoutes from "./modules/mcq/mcq.routes";
+import hostedSessionRoutes from "./modules/hostedSession/hostedSession.routes";
 import connectToDb from "./config/db";
 
 dotenv.config();
@@ -41,6 +42,7 @@ class App {
   private setupRoutes() {
     this.app.use("/auth", authRoutes);
     this.app.use("/mcq", mcqRoutes);
+    this.app.use("/hosted-session", hostedSessionRoutes);
   }
 
   public async run() {

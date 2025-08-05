@@ -1,6 +1,5 @@
 import { InferSchemaType, model, Schema, Types } from "mongoose";
-import { JobTitle } from "./user.model";
-import { Difficulty, QuestionSource } from "../enums";
+import { Difficulty, JobTitle, QuestionSource } from "../enums";
 
 const mcqSchema = new Schema(
   {

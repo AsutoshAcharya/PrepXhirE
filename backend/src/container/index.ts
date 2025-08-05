@@ -7,11 +7,14 @@ import Authenticator from "../middlewares/authenticator";
 //comtrollers
 import McqController from "../modules/mcq/mcq.controller";
 import AuthController from "../modules/auth/auth.controller";
+import HostedSessionController from "../modules/hostedSession/hostedSession.controller";
 
 //services
 import AiService from "../modules/ai/ai.service";
 import AuthService from "../modules/auth/auth.service";
 import McqService from "../modules/mcq/mcq.service";
+import HostedSessionService from "../modules/hostedSession/hosterSession.service";
+import SubmissionService from "../modules/submission/submission.service";
 
 //models
 import { User as UserModel, IUserDocument } from "../models/user.model";
@@ -20,7 +23,6 @@ import {
   ISubmissionDocument,
   Submission as SubmissionModel,
 } from "../models/submission.model";
-import SubmissionService from "../modules/submission/submission.service";
 import {
   HostedSession as HostedSessionModel,
   IHostedSessionDocument,
@@ -35,11 +37,13 @@ export interface Dependencies {
 
   authController: AuthController;
   mcqController: McqController;
+  hostedSessionController: HostedSessionController;
 
   authService: AuthService;
   mcqService: McqService;
   aiService: AiService;
   submissionService: SubmissionService;
+  hostedSessionService: HostedSessionService;
 
   userModel: Model<IUserDocument>;
   mcqModel: Model<IMcqDocument>;
@@ -55,11 +59,13 @@ container.register({
 
   authController: asClass(AuthController).singleton(),
   mcqController: asClass(McqController).singleton(),
+  hostedSessionController: asClass(HostedSessionController).singleton(),
 
   authService: asClass(AuthService).singleton(),
   mcqService: asClass(McqService).singleton(),
   aiService: asClass(AiService).singleton(),
   submissionService: asClass(SubmissionService).singleton(),
+  hostedSessionService: asClass(HostedSessionService).singleton(),
 
   userModel: asValue(UserModel),
   mcqModel: asValue(McqModel),

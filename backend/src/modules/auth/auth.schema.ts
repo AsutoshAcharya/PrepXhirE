@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { JobTitle, UserRole } from "../../models/user.model";
+import { JobTitle, UserRole } from "../../enums";
 
 export const registerSchema = z.object({
   fullName: z.string().min(1).max(40),

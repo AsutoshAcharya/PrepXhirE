@@ -1,25 +1,5 @@
 import { model, Schema, InferSchemaType, Types } from "mongoose";
-
-export enum JobTitle {
-  FrontendDeveloper = "frontend_developer",
-  BackendDeveloper = "backend_developer",
-  FullstackDeveloper = "fullstack_developer",
-  DevOpsEngineer = "devops_engineer",
-  DataScientist = "data_scientist",
-  MachineLearningEngineer = "ml_engineer",
-  MobileDeveloper = "mobile_developer",
-  QAEngineer = "qa_engineer",
-  ProductManager = "product_manager",
-  UIUXDesigner = "ui_ux_designer",
-  SystemAdministrator = "system_administrator",
-  HRAnalyst = "hr_analyst",
-}
-
-export enum UserRole {
-  Admin = "admin",
-  Interviewer = "interviewer",
-  Candidate = "candidate",
-}
+import { JobTitle, UserRole } from "../enums";
 
 const userSchema = new Schema(
   {

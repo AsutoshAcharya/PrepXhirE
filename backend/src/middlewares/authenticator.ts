@@ -4,7 +4,7 @@ import { CustomRequest, JwtDecodeData } from "../types/type";
 import ResponseBuilder from "../utils/ResponseBuilder";
 import Some from "../utils/Some";
 import { Dependencies } from "../container";
-import { UserRole } from "../models/user.model";
+import { UserRole } from "../enums";
 
 class Authenticator {
   private readonly userModel;

@@ -6,6 +6,27 @@ export enum CollectionNames {
   McqRound = "mcqRound",
 }
 
+export enum JobTitle {
+  FrontendDeveloper = "frontend_developer",
+  BackendDeveloper = "backend_developer",
+  FullstackDeveloper = "fullstack_developer",
+  DevOpsEngineer = "devops_engineer",
+  DataScientist = "data_scientist",
+  MachineLearningEngineer = "ml_engineer",
+  MobileDeveloper = "mobile_developer",
+  QAEngineer = "qa_engineer",
+  ProductManager = "product_manager",
+  UIUXDesigner = "ui_ux_designer",
+  SystemAdministrator = "system_administrator",
+  HRAnalyst = "hr_analyst",
+}
+
+export enum UserRole {
+  Admin = "admin",
+  Interviewer = "interviewer",
+  Candidate = "candidate",
+}
+
 export enum CandidateStatus {
   Invited = "invited",
   In_Progress = "in_progress",
