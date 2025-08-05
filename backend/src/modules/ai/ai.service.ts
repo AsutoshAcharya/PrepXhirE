@@ -1,11 +1,7 @@
 import { Groq } from "groq-sdk";
 import dotenv from "dotenv";
 import { JobTitle, UserRole } from "../../models/user.model";
-import {
-  Difficulty,
-  IMcqDocument,
-  QuestionSource,
-} from "../../models/mcq.model";
+import { IMcqDocument } from "../../models/mcq.model";
 import {
   AiFeedbackDto,
   GenerateMcqDto,
@@ -17,6 +13,7 @@ import { Dependencies } from "../../container";
 import Some from "../../utils/Some";
 import pick from "../../utils/pick";
 import ErrorUtils from "../../utils/ErrorUtils";
+import { Difficulty, QuestionSource } from "../../enums";
 
 dotenv.config();
 class AiService {

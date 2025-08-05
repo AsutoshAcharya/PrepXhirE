@@ -14,13 +14,14 @@ import {
   submitSchema,
 } from "./mcq.schema";
 import ResponseBuilder from "../../utils/ResponseBuilder";
-import { Difficulty, QuestionSource } from "../../models/mcq.model";
+
 import Some from "../../utils/Some";
 import { JobTitle } from "../../models/user.model";
 import toMongoObjectId from "../../utils/toMongoObjectId";
 import moment from "moment";
-import { RoundType } from "../../models/submission.model";
+
 import pick from "../../utils/pick";
+import { Difficulty, QuestionSource, RoundType } from "../../enums";
 
 class McqController {
   private readonly mcqService: McqService;

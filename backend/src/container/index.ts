@@ -21,6 +21,14 @@ import {
   Submission as SubmissionModel,
 } from "../models/submission.model";
 import SubmissionService from "../modules/submission/submission.service";
+import {
+  HostedSession as HostedSessionModel,
+  IHostedSessionDocument,
+} from "../models/hostedSession.model";
+import {
+  McqRound as McqRoundModel,
+  IMcqRoundDocument,
+} from "../models/mcqRound.model";
 
 export interface Dependencies {
   authenticator: Authenticator;
@@ -36,6 +44,8 @@ export interface Dependencies {
   userModel: Model<IUserDocument>;
   mcqModel: Model<IMcqDocument>;
   submissionModel: Model<ISubmissionDocument>;
+  hostedSessionModel: Model<IHostedSessionDocument>;
+  mcqRoundModel: Model<IMcqRoundDocument>;
 }
 
 const container: AwilixContainer<Dependencies> = createContainer();
@@ -54,6 +64,8 @@ container.register({
   userModel: asValue(UserModel),
   mcqModel: asValue(McqModel),
   submissionModel: asValue(SubmissionModel),
+  hostedSessionModel: asValue(HostedSessionModel),
+  mcqRoundModel: asValue(McqRoundModel),
 });
 
 export default container;

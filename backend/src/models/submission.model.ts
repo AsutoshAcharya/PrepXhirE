@@ -1,15 +1,5 @@
 import { Schema, Types, InferSchemaType, model } from "mongoose";
-
-export enum Mode {
-  Hosted = "hosted",
-  Practice = "practice",
-}
-
-export enum RoundType {
-  Mcq = "mcq",
-  Coding = "coding",
-  Interview = "interview",
-}
+import { Mode, RoundType } from "../enums";
 
 const mcqResponseSchema = new Schema(
   {

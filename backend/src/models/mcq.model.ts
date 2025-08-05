@@ -1,15 +1,6 @@
 import { InferSchemaType, model, Schema, Types } from "mongoose";
 import { JobTitle } from "./user.model";
-export enum Difficulty {
-  easy = "easy",
-  medium = "medium",
-  hard = "hard",
-}
-
-export enum QuestionSource {
-  ai = "ai",
-  interviewer = "interviewer",
-}
+import { Difficulty, QuestionSource } from "../enums";
 
 const mcqSchema = new Schema(
   {

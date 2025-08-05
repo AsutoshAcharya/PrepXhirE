@@ -1,7 +1,7 @@
 import * as z from "zod";
 import { JobTitle } from "../../models/user.model";
-import { Difficulty } from "../../models/mcq.model";
-import { Mode } from "../../models/submission.model";
+
+import { Difficulty, Mode } from "../../enums";
 
 export const createMcqSchema = z.object({
   jobTitle: z.enum(JobTitle),
