@@ -263,6 +263,26 @@ class McqController {
 
     return this.rb.serverError(serviceResult.message).send(res);
   };
+
+  public retakeMcq = async (req: CustomRequest, res: Response) => {
+    if (!req.user) return this.rb.unauthorized().send(res);
+    const submissionId = Some.String(req.params.submissionId);
+    if (!submissionId)
+      return this.rb.badRequest("Missing submission id").send(res);
+
+    const submissionServiceResult =
+      await this.submissionService.getMcqsFromSubmission(
+        toMongoObjectId(submissionId)
+      );
+    if (submissionServiceResult.success)
+      return this.rb
+        .success({
+          message: "Retake questions fetched successfully",
+          data: submissionServiceResult.data,
+        })
+        .send(res);
+    return this.rb.serverError(submissionServiceResult.message).send(res);
+  };
 }
 
 export default McqController;

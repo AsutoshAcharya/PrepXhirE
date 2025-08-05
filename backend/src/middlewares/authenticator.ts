@@ -61,6 +61,8 @@ class Authenticator {
   public isInterviewer = this.hasRole(UserRole.Interviewer);
 
   public isAdmin = this.hasRole(UserRole.Admin);
+
+  public isCandidate = this.hasRole(UserRole.Candidate);
 }
 
 export default Authenticator;

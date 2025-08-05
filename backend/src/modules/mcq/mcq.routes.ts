@@ -32,6 +32,11 @@ router
     "/submission/:id",
     [authenticator.verifyToken, authenticator.isAdmin],
     controller.deleteSubmission
+  )
+  .get(
+    "/retake/:submissionId",
+    [authenticator.verifyToken, authenticator.isCandidate],
+    controller.retakeMcq
   );
 
 export default router;

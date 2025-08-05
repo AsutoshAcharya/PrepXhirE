@@ -3,7 +3,7 @@ import { IUserDocument, JobTitle, UserRole } from "../models/user.model";
 import { JwtPayload } from "jsonwebtoken";
 import { CreateMcqDto } from "../modules/mcq/mcq.schema";
 import { Types } from "mongoose";
-import { Difficulty, QuestionSource } from "../models/mcq.model";
+import { Difficulty, IMcqDocument, QuestionSource } from "../models/mcq.model";
 import { Mode, RoundType } from "../models/submission.model";
 
 export type ResponseStruct = {
@@ -73,3 +73,8 @@ export type InsertSubmissionDto = {
     aiFeedBack: string;
   };
 };
+
+export interface SubmissionQuestionsResult {
+  _id: Types.ObjectId;
+  questions: Array<Partial<IMcqDocument>>;
+}
