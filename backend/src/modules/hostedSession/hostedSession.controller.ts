@@ -7,6 +7,7 @@ import Some from "../../utils/Some";
 import toMongoObjectId from "../../utils/toMongoObjectId";
 import moment from "moment";
 import { CandidateStatus } from "../../enums";
+import { isValidObjectId } from "mongoose";
 
 class HostedSessionController {
   private readonly rb;
@@ -124,6 +125,9 @@ class HostedSessionController {
     const interviewerId = Some.String(req.params.interviewerId);
     if (!interviewerId)
       return this.rb.badRequest("Missing interviewerId").send(res);
+
+    if (!isValidObjectId(interviewerId))
+      return this.rb.badRequest("Invalid interviewerId").send(res);
 
     const hostedSessionServiceResult =
       await this.hostedSessionService.getSessionsByInterviewerId(
