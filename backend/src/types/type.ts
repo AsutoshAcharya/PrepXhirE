@@ -6,6 +6,7 @@ import { Types } from "mongoose";
 import { IMcqDocument } from "../models/mcq.model";
 
 import {
+  CandidateStatus,
   Difficulty,
   JobTitle,
   Mode,
@@ -86,3 +87,40 @@ export interface SubmissionQuestionsResult {
   _id: Types.ObjectId;
   questions: Array<Partial<IMcqDocument>>;
 }
+
+export type McqRoundDto = {
+  roundTime: number;
+  questionIds: Array<Types.ObjectId>;
+};
+
+export type SessionCandidate = {
+  candidateId: Types.ObjectId;
+  status: CandidateStatus;
+  score?: number;
+  completedAt?: Date;
+};
+
+export type HostedSessionDto = {
+  interviewerId: Types.ObjectId;
+  title: string;
+  jobTitle: JobTitle;
+  jobLocation: string;
+  organizationName: string;
+  isPublic: boolean;
+  rounds: {
+    mcq?: boolean;
+    coding?: boolean;
+    interview?: boolean;
+  };
+  expireDate?: Date;
+  candidates: Array<SessionCandidate>;
+  access?: {
+    inviteCode?: string;
+    maxCandidates?: number;
+  };
+};
+
+export type SessionDto = {
+  mcqRoundDto: McqRoundDto;
+  hostedSessionDto: HostedSessionDto;
+};

@@ -14,7 +14,7 @@ const hostedSessionSchema = new Schema(
       type: String,
       required: true,
     },
-    JobTitle: {
+    jobTitle: {
       type: String,
       enum: Object.values(JobTitle),
       required: true,
