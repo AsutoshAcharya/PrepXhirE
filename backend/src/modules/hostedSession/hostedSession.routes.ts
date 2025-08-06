@@ -19,7 +19,7 @@ router
   //candidate can join public sessions
   .get("/public", authenticator.verifyToken, controller.getPublicSessions)
   .get(
-    "/own-sessions/:interviewerId",
+    "/own-sessions",
     [
       authenticator.verifyToken,
       authenticator.hasRole(UserRole.Admin, UserRole.Interviewer),

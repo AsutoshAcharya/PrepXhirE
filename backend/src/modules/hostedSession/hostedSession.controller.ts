@@ -122,17 +122,15 @@ class HostedSessionController {
   public getOwnHostedSessions = async (req: CustomRequest, res: Response) => {
     if (!req.user) return this.rb.unauthorized().send(res);
 
-    const interviewerId = Some.String(req.params.interviewerId);
-    if (!interviewerId)
-      return this.rb.badRequest("Missing interviewerId").send(res);
+    // const interviewerId = Some.String(req.params.interviewerId);
+    // if (!interviewerId)
+    //   return this.rb.badRequest("Missing interviewerId").send(res);
 
-    if (!isValidObjectId(interviewerId))
-      return this.rb.badRequest("Invalid interviewerId").send(res);
+    // if (!isValidObjectId(interviewerId))
+    //   return this.rb.badRequest("Invalid interviewerId").send(res);
 
     const hostedSessionServiceResult =
-      await this.hostedSessionService.getSessionsByInterviewerId(
-        toMongoObjectId(interviewerId)
-      );
+      await this.hostedSessionService.getSessionsByInterviewerId(req.user._id);
 
     if (hostedSessionServiceResult.success)
       return this.rb
@@ -149,8 +147,7 @@ class HostedSessionController {
     if (!req.user) return this.rb.unauthorized().send(res);
 
     const sessionId = Some.String(req.params.sessionId);
-    if (!sessionId)
-      return this.rb.badRequest("Missing interviewerId").send(res);
+    if (!sessionId) return this.rb.badRequest("Missing sessionId").send(res);
 
     if (!isValidObjectId(sessionId))
       return this.rb.badRequest("Invalid sessionId").send(res);
