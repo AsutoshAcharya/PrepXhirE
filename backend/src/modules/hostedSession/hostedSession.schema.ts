@@ -1,10 +1,17 @@
 import * as z from "zod";
 import { JobTitle } from "../../enums";
 import { isFuture, isToday } from "date-fns";
+import { isValidObjectId } from "mongoose";
 
 const mcqRoundSchema = z.object({
   roundTime: z.number().max(120), // minutes
-  questionIds: z.array(z.string()).min(5).max(15),
+  questionIds: z
+    .array(z.string())
+    .min(5)
+    .max(15)
+    .refine((ids) => ids.every((id) => isValidObjectId(id)), {
+      message: "Invalid mongoId",
+    }),
 });
 
 const roundSchema = z
