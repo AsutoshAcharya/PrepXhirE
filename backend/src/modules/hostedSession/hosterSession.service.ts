@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import { Dependencies } from "../../container";
 import { IHostedSessionDocument } from "../../models/hostedSession.model";
 import { SessionDto, ServiceResult } from "../../types/type";
@@ -60,6 +61,55 @@ class HostedSessionService {
       };
     } finally {
       session.endSession();
+    }
+  }
+
+  public async getPublicSessions(
+    limit: number,
+    offset: number
+  ): Promise<ServiceResult<Array<IHostedSessionDocument>>> {
+    try {
+      const sessions = await this.hostedSessionModel
+        .find({ isPublic: true })
+        .sort({ createdAt: -1 })
+        .skip(offset)
+        .limit(limit);
+
+      return {
+        success: true,
+        data: sessions,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: ErrorUtils.getErrorMessage(
+          error,
+          "Error getting public sessions"
+        ),
+      };
+    }
+  }
+
+  public async getSessionsByInterviewerId(
+    interviewerId: Types.ObjectId
+  ): Promise<ServiceResult<Array<IHostedSessionDocument>>> {
+    try {
+      const sessions = await this.hostedSessionModel
+        .find({ interviewerId })
+        .sort({ createdAt: -1 });
+
+      return {
+        success: true,
+        data: sessions,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: ErrorUtils.getErrorMessage(
+          error,
+          "Error getting own sessions"
+        ),
+      };
     }
   }
 }

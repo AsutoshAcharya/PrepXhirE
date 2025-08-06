@@ -93,6 +93,53 @@ class HostedSessionController {
       return this.rb.serverError(hoserdSessionSserviceResult.message).send(res);
     }
   };
+
+  public getPublicSessions = async (req: CustomRequest, res: Response) => {
+    if (!req.user) return this.rb.unauthorized().send(res);
+    const { limit, offset } = req.query;
+
+    if (!limit || !offset)
+      return this.rb.badRequest("Missing limit, Offset").send(res);
+
+    const hostedSessionServiceResult =
+      await this.hostedSessionService.getPublicSessions(
+        Some.Number(limit),
+        Some.Number(offset)
+      );
+
+    if (hostedSessionServiceResult.success)
+      return this.rb
+        .success({
+          message: "Fetched Public Sessions",
+          data: hostedSessionServiceResult.data,
+        })
+        .send(res);
+
+    return this.rb.serverError(hostedSessionServiceResult.message).send(res);
+  };
+
+  public getOwnHostedSessions = async (req: CustomRequest, res: Response) => {
+    if (!req.user) return this.rb.unauthorized().send(res);
+
+    const interviewerId = Some.String(req.params.interviewerId);
+    if (!interviewerId)
+      return this.rb.badRequest("Missing interviewerId").send(res);
+
+    const hostedSessionServiceResult =
+      await this.hostedSessionService.getSessionsByInterviewerId(
+        toMongoObjectId(interviewerId)
+      );
+
+    if (hostedSessionServiceResult.success)
+      return this.rb
+        .success({
+          message: "Fetched personal sessions",
+          data: hostedSessionServiceResult.data,
+        })
+        .send(res);
+
+    return this.rb.serverError(hostedSessionServiceResult.message).send(res);
+  };
 }
 
 export default HostedSessionController;
