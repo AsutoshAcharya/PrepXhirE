@@ -189,7 +189,7 @@ class HostedSessionService {
 
       //later have to update it when adding other rounds
       if (!mcqRoundData) {
-        session.abortTransaction();
+        await session.abortTransaction();
         return {
           success: false,
           message: "Error getting mcq round questions",
@@ -203,7 +203,7 @@ class HostedSessionService {
         await this.mcqService.getBulkMcqsByIds(questionIds);
 
       if (mcqServiceResult.success) {
-        session.commitTransaction();
+        await session.commitTransaction();
         return {
           success: true,
           data: {
@@ -227,7 +227,7 @@ class HostedSessionService {
         message: ErrorUtils.getErrorMessage(error, "Failed to join session"),
       };
     } finally {
-      session.endSession();
+      await session.endSession();
     }
   }
 }
