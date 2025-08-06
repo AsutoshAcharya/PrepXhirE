@@ -105,6 +105,8 @@ export type HostedSessionDto = {
   title: string;
   jobTitle: JobTitle;
   jobLocation: string;
+  jobDescription: string;
+  requiredSkills: Array<string>;
   organizationName: string;
   isPublic: boolean;
   rounds: {

@@ -36,6 +36,8 @@ class HostedSessionController {
         title,
         jobTitle,
         jobLocation,
+        jobDescription,
+        requiredSkills,
         organizationName,
         isPublic,
         rounds: { mcq, coding, interview },
@@ -49,6 +51,8 @@ class HostedSessionController {
         title,
         jobTitle,
         jobLocation,
+        jobDescription,
+        requiredSkills,
         organizationName,
         isPublic,
         rounds: {

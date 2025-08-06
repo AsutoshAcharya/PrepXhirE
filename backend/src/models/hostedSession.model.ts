@@ -23,6 +23,13 @@ const hostedSessionSchema = new Schema(
       type: String,
       required: true,
     },
+    jobDescription: {
+      type: String,
+      required: true,
+    },
+    requiredSkills: {
+      type: [String],
+    },
     organizationName: {
       type: String,
       required: true,

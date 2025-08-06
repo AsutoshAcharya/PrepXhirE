@@ -21,6 +21,8 @@ export const hostedSessionSchema = z.object({
   title: z.string().min(6).max(35),
   jobTitle: z.enum(JobTitle),
   jobLocation: z.string().max(35),
+  jobDescription: z.string().max(1500),
+  requiredSkills: z.array(z.string()),
   organizationName: z.string().max(35),
   isPublic: z.boolean(),
   rounds: roundSchema,
