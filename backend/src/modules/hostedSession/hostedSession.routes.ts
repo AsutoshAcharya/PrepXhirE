@@ -25,6 +25,7 @@ router
       authenticator.hasRole(UserRole.Admin, UserRole.Interviewer),
     ],
     controller.getOwnHostedSessions
-  );
+  )
+  .post("/join/:sessionId", authenticator.verifyToken, controller.joinSession);
 
 export default router;

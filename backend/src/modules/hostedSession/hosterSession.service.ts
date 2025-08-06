@@ -1,15 +1,30 @@
 import { Types } from "mongoose";
 import { Dependencies } from "../../container";
 import { IHostedSessionDocument } from "../../models/hostedSession.model";
-import { SessionDto, ServiceResult } from "../../types/type";
+import { SessionDto, ServiceResult, SessionCandidate } from "../../types/type";
 import ErrorUtils from "../../utils/ErrorUtils";
+import { CandidateStatus } from "../../enums";
+import toMongoObjectId from "../../utils/toMongoObjectId";
+import { IMcqDocument } from "../../models/mcq.model";
+import pick from "../../utils/pick";
 
 class HostedSessionService {
   private readonly mcqRoundModel;
   private readonly hostedSessionModel;
-  constructor({ mcqRoundModel, hostedSessionModel }: Dependencies) {
+  private readonly mcqModel;
+  private readonly mcqService;
+  constructor({
+    mcqRoundModel,
+    hostedSessionModel,
+    mcqModel,
+    mcqService,
+  }: Dependencies) {
     this.mcqRoundModel = mcqRoundModel;
+
     this.hostedSessionModel = hostedSessionModel;
+
+    this.mcqModel = mcqModel;
+    this.mcqService = mcqService;
   }
 
   public async hostSession({
@@ -35,7 +50,12 @@ class HostedSessionService {
       }
 
       const hostedSession = await this.hostedSessionModel.insertOne(
-        hostedSessionDto,
+        {
+          ...hostedSessionDto,
+          questionSet: {
+            mcqRoundId: mcqRoundInsertResult._id,
+          },
+        },
         { session }
       );
 
@@ -110,6 +130,104 @@ class HostedSessionService {
           "Error getting own sessions"
         ),
       };
+    }
+  }
+
+  public async joinSession(
+    sessionId: Types.ObjectId,
+    candidateId: Types.ObjectId
+  ): Promise<
+    ServiceResult<{
+      session: Partial<IHostedSessionDocument>;
+      mcqQuestions: Array<Partial<IMcqDocument>>;
+    }>
+  > {
+    const session = await this.hostedSessionModel.db.startSession();
+
+    try {
+      session.startTransaction();
+
+      const interviewSession = await this.hostedSessionModel
+        .findOne({ _id: sessionId })
+        .session(session);
+
+      if (!interviewSession) {
+        await session.abortTransaction();
+        return {
+          success: false,
+          message: "Session not found",
+        };
+      }
+
+      const candidateIndex = interviewSession.candidates.findIndex(
+        (c) => String(c.candidateId) === String(candidateId)
+      );
+
+      if (candidateIndex === -1) {
+        interviewSession.candidates.push({
+          candidateId,
+          status: CandidateStatus.In_Progress,
+        });
+      } else {
+        interviewSession.candidates[candidateIndex].status =
+          CandidateStatus.In_Progress;
+      }
+
+      const updatedInterviewSession = await interviewSession.save({ session });
+
+      if (!updatedInterviewSession) {
+        await session.abortTransaction();
+        return {
+          success: false,
+          message: "Error updating session",
+        };
+      }
+
+      const mcqRoundData = await this.mcqRoundModel.findOne({
+        _id: updatedInterviewSession.questionSet?.mcqRoundId,
+      });
+
+      //later have to update it when adding other rounds
+      if (!mcqRoundData) {
+        session.abortTransaction();
+        return {
+          success: false,
+          message: "Error getting mcq round questions",
+        };
+      }
+
+      const questionIds = mcqRoundData.questionIds.map((id) =>
+        toMongoObjectId(id)
+      );
+      const mcqServiceResult =
+        await this.mcqService.getBulkMcqsByIds(questionIds);
+
+      if (mcqServiceResult.success) {
+        session.commitTransaction();
+        return {
+          success: true,
+          data: {
+            session: updatedInterviewSession,
+            mcqQuestions: mcqServiceResult.data.map((mcq) =>
+              pick(mcq, "_id", "difficulty", "createdAt", "question", "options")
+            ),
+          },
+        };
+      }
+
+      await session.abortTransaction();
+      return {
+        success: false,
+        message: "Error getting mcqs",
+      };
+    } catch (error) {
+      await session.abortTransaction();
+      return {
+        success: false,
+        message: ErrorUtils.getErrorMessage(error, "Failed to join session"),
+      };
+    } finally {
+      session.endSession();
     }
   }
 }

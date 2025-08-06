@@ -90,7 +90,7 @@ export interface SubmissionQuestionsResult {
 
 export type McqRoundDto = {
   roundTime: number;
-  questionIds: Array<Types.ObjectId>;
+  questionIds: Array<string>;
 };
 
 export type SessionCandidate = {

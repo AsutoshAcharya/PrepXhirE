@@ -8,7 +8,7 @@ const mcqRoundSchema = new Schema({
   },
   questionIds: {
     required: true,
-    type: [Types.ObjectId],
+    type: [String],
     ref: CollectionNames.McqQuestions,
     validate: {
       validator: (ids: Types.ObjectId[]) => !ids || ids.length <= 15,

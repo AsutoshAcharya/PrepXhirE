@@ -30,7 +30,7 @@ class HostedSessionController {
       const { roundTime, questionIds } = result.data.mcq;
       const mcqRoundData: McqRoundDto = {
         roundTime,
-        questionIds: Some.Array(questionIds).map(toMongoObjectId),
+        questionIds: Some.Array(questionIds),
       };
 
       const {
@@ -143,6 +143,32 @@ class HostedSessionController {
         .send(res);
 
     return this.rb.serverError(hostedSessionServiceResult.message).send(res);
+  };
+
+  public joinSession = async (req: CustomRequest, res: Response) => {
+    if (!req.user) return this.rb.unauthorized().send(res);
+
+    const sessionId = Some.String(req.params.sessionId);
+    if (!sessionId)
+      return this.rb.badRequest("Missing interviewerId").send(res);
+
+    if (!isValidObjectId(sessionId))
+      return this.rb.badRequest("Invalid sessionId").send(res);
+
+    const joinSessionResult = await this.hostedSessionService.joinSession(
+      toMongoObjectId(sessionId),
+      req.user._id
+    );
+
+    if (joinSessionResult.success)
+      return this.rb
+        .success({
+          message: "Joined session successfully",
+          data: joinSessionResult.data,
+        })
+        .send(res);
+
+    return this.rb.serverError(joinSessionResult.message).send(res);
   };
 }
 
