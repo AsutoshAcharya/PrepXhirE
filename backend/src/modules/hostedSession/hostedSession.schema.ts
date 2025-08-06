@@ -1,5 +1,6 @@
 import * as z from "zod";
 import { JobTitle } from "../../enums";
+import { isFuture, isToday } from "date-fns";
 
 const mcqRoundSchema = z.object({
   roundTime: z.number().max(120), // minutes
@@ -26,7 +27,9 @@ export const hostedSessionSchema = z.object({
   organizationName: z.string().max(35),
   isPublic: z.boolean(),
   rounds: roundSchema,
-  expireDate: z.date(),
+  expireDate: z.date().refine((d) => !isToday(d) && isFuture(d), {
+    message: "Only future dates are allowed",
+  }),
   mcq: mcqRoundSchema.optional(),
   candidates: z.array(z.string()),
   access: z.object({
