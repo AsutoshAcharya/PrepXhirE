@@ -31,6 +31,7 @@ class HostedSessionService {
     mcqRoundDto, //may or may not be available interviewer can later select specific rounds for now its required
     hostedSessionDto,
   }: SessionDto): Promise<ServiceResult<IHostedSessionDocument>> {
+    let mcqRoundId;
     try {
       const mcqRoundInsertResult =
         await this.mcqRoundModel.insertOne(mcqRoundDto);
@@ -41,6 +42,7 @@ class HostedSessionService {
           message: "Error adding MCQ round",
         };
       }
+      mcqRoundId = mcqRoundInsertResult._id;
 
       const hostedSession = await this.hostedSessionModel.insertOne({
         ...hostedSessionDto,
@@ -62,6 +64,7 @@ class HostedSessionService {
         data: hostedSession,
       };
     } catch (error) {
+      if (mcqRoundId) await this.mcqRoundModel.deleteOne(mcqRoundId);
       return {
         success: false,
         message: ErrorUtils.getErrorMessage(error, "Error hosting session"),
