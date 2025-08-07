@@ -150,6 +150,14 @@ class HostedSessionService {
           status: CandidateStatus.In_Progress,
         });
       } else {
+        if (
+          interviewSession.candidates[candidateIndex].status !==
+          CandidateStatus.Invited
+        )
+          return {
+            success: false,
+            message: "You have already joined this session",
+          };
         interviewSession.candidates[candidateIndex].status =
           CandidateStatus.In_Progress;
       }
