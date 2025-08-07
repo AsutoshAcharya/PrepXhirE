@@ -31,56 +31,41 @@ class HostedSessionService {
     mcqRoundDto, //may or may not be available interviewer can later select specific rounds for now its required
     hostedSessionDto,
   }: SessionDto): Promise<ServiceResult<IHostedSessionDocument>> {
-    const session = await this.mcqRoundModel.db.startSession();
-
     try {
-      session.startTransaction();
-      //will have to haldle this accordingly
-      const mcqRoundInsertResult = await this.mcqRoundModel.insertOne(
-        mcqRoundDto,
-        { session }
-      );
+      const mcqRoundInsertResult =
+        await this.mcqRoundModel.insertOne(mcqRoundDto);
 
-      if (!mcqRoundInsertResult) {
-        await session.abortTransaction();
+      if (!mcqRoundInsertResult || !mcqRoundInsertResult._id) {
         return {
           success: false,
-          message: "Error adding mcq round",
+          message: "Error adding MCQ round",
         };
       }
 
-      const hostedSession = await this.hostedSessionModel.insertOne(
-        {
-          ...hostedSessionDto,
-          questionSet: {
-            mcqRoundId: mcqRoundInsertResult._id,
-          },
+      const hostedSession = await this.hostedSessionModel.insertOne({
+        ...hostedSessionDto,
+        questionSet: {
+          mcqRoundId: mcqRoundInsertResult._id,
         },
-        { session }
-      );
+      });
 
-      if (!hostedSession) {
-        await session.abortTransaction();
+      if (!hostedSession || !hostedSession._id) {
+        await this.mcqRoundModel.deleteOne(mcqRoundInsertResult._id);
         return {
           success: false,
           message: "Error hosting session",
         };
       }
 
-      await session.commitTransaction();
-
       return {
         success: true,
         data: hostedSession,
       };
     } catch (error) {
-      await session.abortTransaction();
       return {
         success: false,
         message: ErrorUtils.getErrorMessage(error, "Error hosting session"),
       };
-    } finally {
-      session.endSession();
     }
   }
 
@@ -100,6 +85,7 @@ class HostedSessionService {
         data: sessions,
       };
     } catch (error) {
+      console.log("Hosting error", error);
       return {
         success: false,
         message: ErrorUtils.getErrorMessage(
@@ -142,17 +128,12 @@ class HostedSessionService {
       mcqQuestions: Array<Partial<IMcqDocument>>;
     }>
   > {
-    const session = await this.hostedSessionModel.db.startSession();
-
     try {
-      session.startTransaction();
-
-      const interviewSession = await this.hostedSessionModel
-        .findOne({ _id: sessionId })
-        .session(session);
+      const interviewSession = await this.hostedSessionModel.findOne({
+        _id: sessionId,
+      });
 
       if (!interviewSession) {
-        await session.abortTransaction();
         return {
           success: false,
           message: "Session not found",
@@ -173,10 +154,9 @@ class HostedSessionService {
           CandidateStatus.In_Progress;
       }
 
-      const updatedInterviewSession = await interviewSession.save({ session });
+      const updatedInterviewSession = await interviewSession.save();
 
       if (!updatedInterviewSession) {
-        await session.abortTransaction();
         return {
           success: false,
           message: "Error updating session",
@@ -189,7 +169,6 @@ class HostedSessionService {
 
       //later have to update it when adding other rounds
       if (!mcqRoundData) {
-        await session.abortTransaction();
         return {
           success: false,
           message: "Error getting mcq round questions",
@@ -203,7 +182,6 @@ class HostedSessionService {
         await this.mcqService.getBulkMcqsByIds(questionIds);
 
       if (mcqServiceResult.success) {
-        await session.commitTransaction();
         return {
           success: true,
           data: {
@@ -215,19 +193,15 @@ class HostedSessionService {
         };
       }
 
-      await session.abortTransaction();
       return {
         success: false,
         message: "Error getting mcqs",
       };
     } catch (error) {
-      await session.abortTransaction();
       return {
         success: false,
         message: ErrorUtils.getErrorMessage(error, "Failed to join session"),
       };
-    } finally {
-      await session.endSession();
     }
   }
 }

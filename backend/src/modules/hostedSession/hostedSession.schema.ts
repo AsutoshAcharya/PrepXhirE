@@ -1,6 +1,6 @@
 import * as z from "zod";
 import { JobTitle } from "../../enums";
-import { isFuture, isToday } from "date-fns";
+import { isFuture, isPast, isToday, isValid } from "date-fns";
 import { isValidObjectId } from "mongoose";
 
 const mcqRoundSchema = z.object({
@@ -34,15 +34,23 @@ export const hostedSessionSchema = z.object({
   organizationName: z.string().max(35),
   isPublic: z.boolean(),
   rounds: roundSchema,
-  expireDate: z.date().refine((d) => !isToday(d) && isFuture(d), {
-    message: "Only future dates are allowed",
-  }),
+  expireDate: z.string().refine(
+    (d) => {
+      const date = new Date(d);
+      return isValid(date) && !isToday(date) && isFuture(date);
+    },
+    {
+      message: "Only future dates are allowed",
+    }
+  ),
   mcq: mcqRoundSchema.optional(),
-  candidates: z.array(z.string()),
-  access: z.object({
-    inviteCode: z.string().max(15).optional(),
-    maxCandidates: z.number().max(50).optional(),
-  }),
+  candidates: z.array(z.string()).optional(),
+  access: z
+    .object({
+      inviteCode: z.string().max(15).optional(),
+      maxCandidates: z.number().max(50).optional(),
+    })
+    .optional(),
 });
 
 export type McqRoundSchemaType = z.infer<typeof mcqRoundSchema>;

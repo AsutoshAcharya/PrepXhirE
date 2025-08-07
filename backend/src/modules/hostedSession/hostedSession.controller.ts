@@ -24,6 +24,7 @@ class HostedSessionController {
     const result = hostedSessionSchema.safeParse(req.body);
 
     if (!result.success) {
+      console.log(result);
       return this.rb.badRequest("Invalid payload data").send(res);
     }
     if (result.data.mcq) {
@@ -62,10 +63,12 @@ class HostedSessionController {
           interview: Some.Boolean(interview),
         },
         ...(expireDate && { expireDate: moment(expireDate).utc().toDate() }),
-        candidates: candidates.map((c) => ({
-          candidateId: toMongoObjectId(c),
-          status: CandidateStatus.Invited,
-        })),
+        ...(candidates && {
+          candidates: candidates.map((c) => ({
+            candidateId: toMongoObjectId(c),
+            status: CandidateStatus.Invited,
+          })),
+        }),
         ...(access && {
           access: {
             inviteCode: Some.String(access?.inviteCode),

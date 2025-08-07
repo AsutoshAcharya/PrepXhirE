@@ -57,7 +57,7 @@ const hostedSessionSchema = new Schema(
       type: Date,
       required: false,
       validate: {
-        validator: (d: Date) => isToday(d) && isFuture(d),
+        validator: (d: Date) => !isToday(d) && isFuture(d),
         message: "Only future dates are allowed",
       },
     },

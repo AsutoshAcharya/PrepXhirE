@@ -115,7 +115,7 @@ export type HostedSessionDto = {
     interview?: boolean;
   };
   expireDate?: Date;
-  candidates: Array<SessionCandidate>;
+  candidates?: Array<SessionCandidate>;
   access?: {
     inviteCode?: string;
     maxCandidates?: number;
