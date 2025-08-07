@@ -112,7 +112,7 @@ export interface IHostedSessionDocument extends HostedSessionSchemaType {
   _id: Types.ObjectId;
 }
 
-export const HostedSession = model<IHostedSessionDocument>(
+export const HostedSessionModel = model<IHostedSessionDocument>(
   "hostedSession",
   hostedSessionSchema
 );

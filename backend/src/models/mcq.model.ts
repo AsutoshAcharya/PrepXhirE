@@ -56,4 +56,4 @@ export interface IMcqDocument extends McqSchemaType {
   _id: Types.ObjectId;
 }
 
-export const McqQuestion = model<IMcqDocument>("McqQuestion", mcqSchema);
+export const McqQuestionModel = model<IMcqDocument>("McqQuestion", mcqSchema);

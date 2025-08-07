@@ -17,20 +17,21 @@ import HostedSessionService from "../modules/hostedSession/hosterSession.service
 import SubmissionService from "../modules/submission/submission.service";
 
 //models
-import { User as UserModel, IUserDocument } from "../models/user.model";
-import { McqQuestion as McqModel, IMcqDocument } from "../models/mcq.model";
+import { UserModel, IUserDocument } from "../models/user.model";
+import {
+  McqQuestionModel as McqModel,
+  IMcqDocument,
+} from "../models/mcq.model";
 import {
   ISubmissionDocument,
-  Submission as SubmissionModel,
+  SubmissionModel,
 } from "../models/submission.model";
 import {
-  HostedSession as HostedSessionModel,
+  HostedSessionModel,
   IHostedSessionDocument,
 } from "../models/hostedSession.model";
-import {
-  McqRound as McqRoundModel,
-  IMcqRoundDocument,
-} from "../models/mcqRound.model";
+import { McqRoundModel, IMcqRoundDocument } from "../models/mcqRound.model";
+import { InterviewModel, IInterviewDocument } from "../models/interview.model";
 
 export interface Dependencies {
   authenticator: Authenticator;
@@ -50,6 +51,7 @@ export interface Dependencies {
   submissionModel: Model<ISubmissionDocument>;
   hostedSessionModel: Model<IHostedSessionDocument>;
   mcqRoundModel: Model<IMcqRoundDocument>;
+  interviewModel: Model<IInterviewDocument>;
 }
 
 const container: AwilixContainer<Dependencies> = createContainer();
@@ -72,6 +74,7 @@ container.register({
   submissionModel: asValue(SubmissionModel),
   hostedSessionModel: asValue(HostedSessionModel),
   mcqRoundModel: asValue(McqRoundModel),
+  interviewModel: asValue(InterviewModel),
 });
 
 export default container;

@@ -33,4 +33,4 @@ export interface IUserDocument extends UserSchemaType {
   _id: Types.ObjectId;
 }
 
-export const User = model<IUserDocument>("User", userSchema);
+export const UserModel = model<IUserDocument>("User", userSchema);

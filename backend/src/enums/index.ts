@@ -4,6 +4,7 @@ export enum CollectionNames {
   Submissions = "submissions",
   HostedSession = "hostedSession",
   McqRound = "mcqRound",
+  AiInterview = "aiinterview",
 }
 
 export enum JobTitle {
@@ -55,4 +56,10 @@ export enum RoundType {
   Mcq = "mcq",
   Coding = "coding",
   Interview = "interview",
+}
+
+export enum InterviewUser {
+  User = "user",
+  Ai = "ai",
+  Interviewer = "interviewer",
 }

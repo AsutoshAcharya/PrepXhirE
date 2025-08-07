@@ -23,4 +23,7 @@ export interface IMcqRoundDocument extends McqRoundSchemaType {
   _id: Types.ObjectId;
 }
 
-export const McqRound = model<IMcqRoundDocument>("mcqRound", mcqRoundSchema);
+export const McqRoundModel = model<IMcqRoundDocument>(
+  "mcqRound",
+  mcqRoundSchema
+);

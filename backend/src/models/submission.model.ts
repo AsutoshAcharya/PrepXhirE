@@ -74,7 +74,7 @@ export interface ISubmissionDocument extends SubmissionSchemaType {
   _id: Types.ObjectId;
 }
 
-export const Submission = model<ISubmissionDocument>(
+export const SubmissionModel = model<ISubmissionDocument>(
   "submission",
   submissionSchema
 );
