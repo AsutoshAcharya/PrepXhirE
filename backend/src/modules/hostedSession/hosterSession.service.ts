@@ -75,7 +75,7 @@ class HostedSessionService {
   ): Promise<ServiceResult<Array<IHostedSessionDocument>>> {
     try {
       const sessions = await this.hostedSessionModel
-        .find({ isPublic: true })
+        .find({ isPublic: true }, { access: 0 })
         .sort({ createdAt: -1 })
         .skip(offset)
         .limit(limit);
