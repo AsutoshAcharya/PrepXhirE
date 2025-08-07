@@ -3,6 +3,25 @@ import { InferSchemaType, model, Schema, Types } from "mongoose";
 import { isFuture, isToday } from "date-fns";
 import { CandidateStatus, CollectionNames, JobTitle } from "../enums";
 
+const candidateSchema = new Schema(
+  {
+    candidateId: {
+      type: Types.ObjectId,
+      ref: CollectionNames.Users,
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: Object.values(CandidateStatus),
+      default: CandidateStatus.Invited,
+      required: true,
+    },
+    score: Number,
+    completedAt: Date,
+  },
+  { _id: false }
+);
+
 //only interviewer cah host
 const hostedSessionSchema = new Schema(
   {
@@ -70,23 +89,7 @@ const hostedSessionSchema = new Schema(
       //   codingRoundId,
       //   interviewRoundId,
     },
-    candidates: [
-      {
-        candidateId: {
-          type: Types.ObjectId,
-          ref: CollectionNames.Users,
-          required: true,
-        },
-        status: {
-          type: String,
-          enum: Object.values(CandidateStatus),
-          default: CandidateStatus.Invited,
-          required: true,
-        },
-        score: Number,
-        completedAt: Date,
-      },
-    ],
+    candidates: [candidateSchema],
     access: {
       inviteCode: {
         type: String,
