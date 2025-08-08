@@ -1,8 +1,7 @@
 import { InferSchemaType, model, Schema, Types } from "mongoose";
-
 import { InterviewUser, CollectionNames } from "../enums";
 
-const ConversationMessageSchema = new Schema(
+const MessageSchema = new Schema(
   {
     type: {
       type: String,
@@ -21,6 +20,22 @@ const ConversationMessageSchema = new Schema(
   { _id: false }
 );
 
+const QAConversationSchema = new Schema(
+  {
+    question: {
+      type: MessageSchema,
+      required: true,
+    },
+    answer: {
+      type: MessageSchema,
+    },
+    aiFeedback: {
+      type: String,
+    },
+  },
+  { _id: false }
+);
+
 const InterviewSchema = new Schema(
   {
     candidateId: {
@@ -28,11 +43,28 @@ const InterviewSchema = new Schema(
       ref: CollectionNames.Users,
       required: true,
     },
-    interviewerId: { type: Types.ObjectId, ref: CollectionNames.Users },
-    sessionId: { type: Types.ObjectId, ref: CollectionNames.HostedSession },
-    conversation: [ConversationMessageSchema],
-    interviewRecordUrl: String,
-    aiFeedback: String,
+    interviewerId: {
+      type: Types.ObjectId,
+      ref: CollectionNames.Users,
+    },
+    sessionId: {
+      type: Types.ObjectId,
+      ref: CollectionNames.HostedSession,
+    },
+    conversation: {
+      type: [QAConversationSchema],
+      default: [],
+    },
+    currentQuestionIndex: {
+      type: Number,
+      default: 0,
+    },
+    interviewRecordUrl: {
+      type: String,
+    },
+    overallAiFeedback: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

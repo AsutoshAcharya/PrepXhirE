@@ -8,6 +8,7 @@ import { IMcqDocument } from "../models/mcq.model";
 import {
   CandidateStatus,
   Difficulty,
+  InterviewUser,
   JobTitle,
   Mode,
   QuestionSource,
@@ -125,4 +126,20 @@ export type HostedSessionDto = {
 export type SessionDto = {
   mcqRoundDto: McqRoundDto;
   hostedSessionDto: HostedSessionDto;
+};
+
+export type insertInterviewDto = {
+  user: InterviewUser;
+  candidateId: Types.ObjectId;
+  message: string;
+  sessionId?: Types.ObjectId;
+  interviewerId?: Types.ObjectId;
+};
+
+export type UpsertConversationDto = {
+  id: Types.ObjectId;
+  message: {
+    message: string;
+    user: InterviewUser;
+  };
 };

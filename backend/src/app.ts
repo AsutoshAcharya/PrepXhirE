@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import authRoutes from "./modules/auth/auth.routes";
 import mcqRoutes from "./modules/mcq/mcq.routes";
 import hostedSessionRoutes from "./modules/hostedSession/hostedSession.routes";
+import interviewRoutes from "./modules/interview/interview.routes";
 import connectToDb from "./config/db";
 
 dotenv.config();
@@ -43,6 +44,7 @@ class App {
     this.app.use("/auth", authRoutes);
     this.app.use("/mcq", mcqRoutes);
     this.app.use("/hosted-session", hostedSessionRoutes);
+    this.app.use("/interview", interviewRoutes);
   }
 
   public async run() {

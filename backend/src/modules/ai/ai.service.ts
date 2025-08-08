@@ -19,9 +19,11 @@ dotenv.config();
 class AiService {
   private readonly groq;
   private readonly mcqService;
+  private readonly interviewService;
 
-  constructor({ mcqService }: Dependencies) {
+  constructor({ mcqService, interviewService }: Dependencies) {
     this.mcqService = mcqService;
+    this.interviewService = interviewService;
 
     this.groq = new Groq({
       apiKey: process.env.GROQ_API_KEY,
