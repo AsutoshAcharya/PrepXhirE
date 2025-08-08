@@ -6,6 +6,7 @@ import {
   AiFeedbackDto,
   GenerateMcqDto,
   InsertDto,
+  InterviewStartDto,
   ServiceResult,
 } from "../../types/type";
 import { Dependencies } from "../../container";
@@ -14,6 +15,8 @@ import Some from "../../utils/Some";
 import pick from "../../utils/pick";
 import ErrorUtils from "../../utils/ErrorUtils";
 import { Difficulty, JobTitle, QuestionSource, UserRole } from "../../enums";
+import { IInterviewDocument } from "../../models/interview.model";
+import { ChatCompletionMessageParam } from "groq-sdk/resources/chat/completions";
 
 dotenv.config();
 class AiService {
@@ -100,9 +103,54 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
     return intro + summaryData;
   }
 
-  public async getAiResponse(prompt: string): Promise<string> {
+  public getInterviewPrompt(
+    jobTitle: JobTitle,
+    candidateSkills: string[],
+    data?: IInterviewDocument
+  ): string {
+    const skillsList = candidateSkills.join(", ");
+    const conversation = data
+      ? data.conversation
+          .map((pair, index) => {
+            const question = pair.question?.message || "";
+            const answer = pair.answer?.message || "[No answer yet]";
+            return `Q${index + 1}: ${question}\nA${index + 1}: ${answer}`;
+          })
+          .join("\n\n")
+      : "No conversation has started yet.";
+
+    const prompt = `
+You are a professional interviewer at **PrepXhirE**, an AI-driven interview platform built to simulate real-world interview scenarios and evaluate candidates effectively.
+
+You are currently interviewing a candidate for the position of **${jobTitle}**.
+The candidate has listed the following skills: ${skillsList}.
+
+Your responsibilities include:
+- Asking relevant and thoughtful questions related to the job title and candidate's skills.
+- Following up based on previous responses to evaluate depth of knowledge.
+- Maintaining a professional yet friendly tone throughout.
+- Helping the candidate feel comfortable while still challenging them with meaningful questions.
+
+Below is the conversation so far:
+${conversation}
+
+Please continue the interview by asking the next appropriate question.
+`;
+
+    return prompt.trim();
+  }
+
+  public async getAiResponse(
+    prompt: string,
+    systemMessage?: string
+  ): Promise<string> {
+    const messages: ChatCompletionMessageParam[] = [
+      { role: "system", content: Some.String(systemMessage) },
+      { role: "user", content: prompt },
+    ];
+
     const response = await this.groq.chat.completions.create({
-      messages: [{ role: "user", content: prompt }],
+      messages: [messages[1]],
       model: "llama3-70b-8192",
       max_tokens: 2048,
       temperature: 0.8,
@@ -221,6 +269,17 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
       };
     }
   }
+
+  public async startInterview({
+    jobTitle,
+    candidateSkills,
+  }: InterviewStartDto) {
+    const prompt = this.getInterviewPrompt(jobTitle, candidateSkills);
+    const rawContent = await this.getAiResponse(prompt);
+    console.log(rawContent);
+  }
+  public async interviewOnGoing() {}
+  public async interviewEnd() {}
 }
 
 export default AiService;

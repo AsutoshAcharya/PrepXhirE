@@ -143,3 +143,8 @@ export type UpsertConversationDto = {
     user: InterviewUser;
   };
 };
+
+export type InterviewStartDto = {
+  jobTitle: JobTitle;
+  candidateSkills: Array<string>;
+};
