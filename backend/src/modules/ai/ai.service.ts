@@ -14,7 +14,13 @@ import { Dependencies } from "../../container";
 import Some from "../../utils/Some";
 import pick from "../../utils/pick";
 import ErrorUtils from "../../utils/ErrorUtils";
-import { Difficulty, JobTitle, QuestionSource, UserRole } from "../../enums";
+import {
+  Difficulty,
+  InterviewUser,
+  JobTitle,
+  QuestionSource,
+  UserRole,
+} from "../../enums";
 import { IInterviewDocument } from "../../models/interview.model";
 import { ChatCompletionMessageParam } from "groq-sdk/resources/chat/completions";
 
@@ -271,13 +277,43 @@ Please continue the interview by asking the next appropriate question.
   }
 
   public async startInterview({
+    candidateId,
     jobTitle,
     candidateSkills,
-  }: InterviewStartDto) {
+    interviewerId,
+    sessionId,
+  }: InterviewStartDto): Promise<ServiceResult<IInterviewDocument>> {
     const prompt = this.getInterviewPrompt(jobTitle, candidateSkills);
-    const rawContent = await this.getAiResponse(prompt);
-    console.log(rawContent);
+
+    try {
+      const rawContent = await this.getAiResponse(prompt);
+      console.log(rawContent);
+
+      const insertInterviewDataResult =
+        await this.interviewService.insertInterviewData({
+          candidateId,
+          user: InterviewUser.Ai,
+          message: rawContent,
+          interviewerId,
+          sessionId,
+        });
+
+      if (insertInterviewDataResult.success)
+        return { success: true, data: insertInterviewDataResult.data };
+
+      return {
+        success: false,
+        message: insertInterviewDataResult.message,
+      };
+    } catch (error) {
+      console.log("Error getting ai result", error);
+      return {
+        success: false,
+        message: ErrorUtils.getErrorMessage(error, "Error getting ai result"),
+      };
+    }
   }
+
   public async interviewOnGoing() {}
   public async interviewEnd() {}
 }

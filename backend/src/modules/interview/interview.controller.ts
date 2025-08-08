@@ -24,10 +24,20 @@ class InterviewController {
       jobTitle: Some.String(jobTitle || req.user?.jobTitle) as JobTitle,
       //   skills: Some.String(skills).split(","),
     };
-    await this.aiService.startInterview({
+    const aiServiceResult = await this.aiService.startInterview({
+      candidateId: req.user._id,
       jobTitle: queryData.jobTitle,
       candidateSkills: req.user.skills,
     });
+    if (aiServiceResult.success)
+      return this.rb
+        .success({
+          message: "Interview started",
+          data: aiServiceResult.data,
+        })
+        .send(res);
+
+    return this.rb.serverError(aiServiceResult.message).send(res);
   };
 }
 

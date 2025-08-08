@@ -145,6 +145,9 @@ export type UpsertConversationDto = {
 };
 
 export type InterviewStartDto = {
+  candidateId: Types.ObjectId;
   jobTitle: JobTitle;
   candidateSkills: Array<string>;
+  interviewerId?: Types.ObjectId;
+  sessionId?: Types.ObjectId;
 };
