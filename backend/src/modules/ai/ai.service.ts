@@ -6,6 +6,7 @@ import {
   AiFeedbackDto,
   GenerateMcqDto,
   InsertDto,
+  InterviewOnGoingDto,
   InterviewStartDto,
   ServiceResult,
 } from "../../types/type";
@@ -309,12 +310,77 @@ Please continue the interview by asking the next appropriate question.
       console.log("Error getting ai result", error);
       return {
         success: false,
-        message: ErrorUtils.getErrorMessage(error, "Error getting ai result"),
+        message: ErrorUtils.getErrorMessage(error, "Something went wrong!"),
       };
     }
   }
 
-  public async interviewOnGoing() {}
+  public async onGoingInterview({
+    interviewId,
+    candidateId,
+    jobTitle,
+    candidateSkills,
+    interviewerId,
+    sessionId,
+    userResponse,
+  }: InterviewOnGoingDto): Promise<ServiceResult<IInterviewDocument>> {
+    try {
+      const insertUserResponse = await this.interviewService.updateConversation(
+        {
+          id: interviewId,
+          message: { message: userResponse, user: InterviewUser.User },
+        }
+      );
+
+      if (insertUserResponse.success) {
+        const interviewServiceResult =
+          await this.interviewService.getInterviewById(interviewId);
+
+        if (interviewServiceResult.success) {
+          const prompt = this.getInterviewPrompt(
+            jobTitle,
+            candidateSkills,
+            interviewServiceResult.data
+          );
+
+          const rawContent = await this.getAiResponse(prompt);
+          console.log(rawContent);
+
+          const insertAiResponseResult =
+            await this.interviewService.updateConversation({
+              id: interviewId,
+              message: { message: rawContent, user: InterviewUser.Ai },
+            });
+          if (insertAiResponseResult.success)
+            return {
+              success: true,
+              data: insertAiResponseResult.data,
+            };
+
+          return {
+            success: false,
+            message: "Error inserting ai response",
+          };
+        }
+
+        return {
+          success: false,
+          message: "Interview not found",
+        };
+      }
+
+      return {
+        success: false,
+        message: insertUserResponse.message || "Something went wrong",
+      };
+    } catch (error) {
+      console.log("Error in ongoing interview", error);
+      return {
+        success: false,
+        message: ErrorUtils.getErrorMessage(error, "Something went wrong!"),
+      };
+    }
+  }
   public async interviewEnd() {}
 }
 

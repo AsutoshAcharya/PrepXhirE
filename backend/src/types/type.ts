@@ -151,3 +151,7 @@ export type InterviewStartDto = {
   interviewerId?: Types.ObjectId;
   sessionId?: Types.ObjectId;
 };
+export type InterviewOnGoingDto = InterviewStartDto & {
+  interviewId: Types.ObjectId;
+  userResponse: string;
+};

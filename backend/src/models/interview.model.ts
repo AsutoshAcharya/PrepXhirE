@@ -3,7 +3,7 @@ import { InterviewUser, CollectionNames } from "../enums";
 
 const MessageSchema = new Schema(
   {
-    type: {
+    user: {
       type: String,
       enum: Object.values(InterviewUser),
       required: true,

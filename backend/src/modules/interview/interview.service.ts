@@ -27,7 +27,7 @@ class InterviewService {
         conversation: [
           {
             question: {
-              type: interviewDto.user,
+              user: interviewDto.user,
               message: interviewDto.message,
             },
           },
@@ -90,8 +90,10 @@ class InterviewService {
             {
               $push: {
                 conversation: {
-                  question: message.message,
-                  type: message.user,
+                  question: {
+                    message: message.message,
+                    user: message.user,
+                  },
                 },
               },
               $inc: {
@@ -118,7 +120,7 @@ class InterviewService {
           const lastIndex = interview.conversation.length - 1;
           interview.conversation[lastIndex].answer = {
             message: message.message,
-            type: message.user,
+            user: message.user,
             timestamp: moment.utc().toDate(),
           };
 
