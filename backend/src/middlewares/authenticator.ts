@@ -1,10 +1,11 @@
 import { NextFunction, Response } from "express";
 import jwt from "jsonwebtoken";
-import { CustomRequest, JwtDecodeData } from "../types/type";
+import { AuthUser, CustomRequest, JwtDecodeData } from "../types/type";
 import ResponseBuilder from "../utils/ResponseBuilder";
 import Some from "../utils/Some";
 import { Dependencies } from "../container";
-import { UserRole } from "../enums";
+import { JobTitle, UserRole } from "../enums";
+import toMongoObjectId from "../utils/toMongoObjectId";
 
 class Authenticator {
   private readonly userModel;
@@ -35,12 +36,20 @@ class Authenticator {
           return this.rb.unauthorized().send(res);
         }
 
-        const { id } = decoded as JwtDecodeData;
-        const user = await this.userModel.findById(id);
+        const { id, role, email, skills, jobTitle, name } =
+          decoded as JwtDecodeData;
+        // const user = await this.userModel.findById(id);
 
-        if (!user) return this.rb.notFound("User not found").send(res);
+        // if (!user) return this.rb.notFound("User not found").send(res);
 
-        req.user = user;
+        req.user = {
+          _id: toMongoObjectId(id),
+          fullName: name,
+          email,
+          role: role as UserRole,
+          jobTitle: jobTitle as JobTitle,
+          skills,
+        } as AuthUser;
         next();
       });
     } catch {

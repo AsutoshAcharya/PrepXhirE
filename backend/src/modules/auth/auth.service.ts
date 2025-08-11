@@ -39,6 +39,9 @@ export default class AuthService {
           id: user._id,
           name: user.fullName,
           role: user.role,
+          email: user.email,
+          jobTitle: user.jobTitle,
+          skills: user.skills,
         },
         process.env.JWT as string,
         { expiresIn: "7d" }

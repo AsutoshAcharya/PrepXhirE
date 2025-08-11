@@ -32,12 +32,16 @@ export interface JwtDecodeData extends JwtPayload {
   id: string;
   name: string;
   role: UserRole;
+  email: string;
+  jobTitle: JobTitle;
+  skills: Array<string>;
   iat?: number;
   exp?: number;
 }
 
+export type AuthUser = Omit<IUserDocument, "password">;
 export interface CustomRequest extends Request {
-  user?: IUserDocument;
+  user?: AuthUser;
 }
 
 export type InsertDto = CreateMcqDto & {

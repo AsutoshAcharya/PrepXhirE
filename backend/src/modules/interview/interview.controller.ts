@@ -81,6 +81,8 @@ class InterviewController {
       .badRequest(result.error?.message || "Invalid payload")
       .send(res);
   };
+
+  public endInterview = async (req: CustomRequest, res: Response) => {};
 }
 
 export default InterviewController;
