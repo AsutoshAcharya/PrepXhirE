@@ -78,7 +78,8 @@ class InterviewService {
   public async updateConversation(
     updateConversationDto: UpsertConversationDto
   ): Promise<ServiceResult<IInterviewDocument>> {
-    const { id, userMessage, interviewerMessage } = updateConversationDto;
+    const { id, userMessage, interviewerMessage, aiFeedback } =
+      updateConversationDto;
 
     try {
       const interview = await this.interviewModel.findById(id);
@@ -98,6 +99,9 @@ class InterviewService {
           user: userMessage.user,
           timestamp: moment.utc().toDate(),
         };
+
+        if (aiFeedback)
+          interview.conversation[lastIndex].aiFeedback = aiFeedback;
       } else {
         return {
           success: false,

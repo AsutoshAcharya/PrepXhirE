@@ -146,6 +146,7 @@ export type UpsertConversationDto = {
     message: string;
     user: InterviewUser.Ai | InterviewUser.Interviewer;
   };
+  aiFeedback?: string;
 };
 
 export type InterviewStartDto = {

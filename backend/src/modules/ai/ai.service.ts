@@ -25,6 +25,7 @@ import {
 import { IInterviewDocument } from "../../models/interview.model";
 import { ChatCompletionMessageParam } from "groq-sdk/resources/chat/completions";
 import moment from "moment";
+import { aiInterviewResponseSchema } from "./ai.schema";
 
 dotenv.config();
 class AiService {
@@ -128,21 +129,30 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
       : "No conversation has started yet.";
 
     const prompt = `
-You are a professional interviewer at **PrepXhirE**, an AI-driven interview platform built to simulate real-world interview scenarios and evaluate candidates effectively.
+You are a professional interviewer at **PrepXhirE**, an AI-driven interview platform built to simulate real-world interviews and evaluate candidates.
 
-You are currently interviewing a candidate for the position of **${jobTitle}**.
-The candidate has listed the following skills: ${skillsList}.
+Candidate is applying for the role of **${jobTitle}** with these skills: ${skillsList}.
 
-Your responsibilities include:
-- Asking relevant and thoughtful questions related to the job title and candidate's skills.
-- Following up based on previous responses to evaluate depth of knowledge.
-- Maintaining a professional yet friendly tone throughout.
-- Helping the candidate feel comfortable while still challenging them with meaningful questions.
+Below is the current conversation:
 
-Below is the conversation so far:
 ${conversation}
 
-Please continue the interview by asking the next appropriate question.
+Your task is to:
+1. Briefly **analyze the candidate's most recent answer**.
+2. Offer **concise, professional feedback** (positive or constructive).
+3. Then, **ask the next interview question** based on the candidate's response, skills, and job role.
+
+- Keep feedback helpful and professional (2-3 sentences max).
+- Keep the tone friendly yet evaluative.
+- If this is the first question, return an empty string for "feedback".
+- Response must follow this format:
+
+{
+  "feedback": "string",
+  "nextQuestion":"string"
+}
+
+Respond ONLY with the raw JSON object. Do NOT include any extra text, markdown, or explanation.
 `;
 
     return prompt.trim();
@@ -289,23 +299,33 @@ Please continue the interview by asking the next appropriate question.
 
     try {
       const rawContent = await this.getAiResponse(prompt);
-      console.log(rawContent);
 
-      const insertInterviewDataResult =
-        await this.interviewService.insertInterviewData({
-          candidateId,
-          user: InterviewUser.Ai,
-          message: rawContent,
-          interviewerId,
-          sessionId,
-        });
+      const result = aiInterviewResponseSchema.safeParse(
+        JSON.parse(rawContent)
+      );
 
-      if (insertInterviewDataResult.success)
-        return { success: true, data: insertInterviewDataResult.data };
+      if (result.success) {
+        const insertInterviewDataResult =
+          await this.interviewService.insertInterviewData({
+            candidateId,
+            user: InterviewUser.Ai,
+            message: result.data.nextQuestion,
+            interviewerId,
+            sessionId,
+          });
+
+        if (insertInterviewDataResult.success)
+          return { success: true, data: insertInterviewDataResult.data };
+
+        return {
+          success: false,
+          message: insertInterviewDataResult.message,
+        };
+      }
 
       return {
         success: false,
-        message: insertInterviewDataResult.message,
+        message: "Invalid ai response",
       };
     } catch (error) {
       console.log("Error getting ai result", error);
@@ -324,7 +344,7 @@ Please continue the interview by asking the next appropriate question.
     interviewerId,
     sessionId,
     userResponse,
-  }: InterviewOnGoingDto): Promise<ServiceResult<IInterviewDocument>> {
+  }: InterviewOnGoingDto): Promise<ServiceResult<any>> {
     try {
       const interviewServiceResult =
         await this.interviewService.getInterviewById(interviewId);
@@ -353,29 +373,41 @@ Please continue the interview by asking the next appropriate question.
       } as IInterviewDocument);
 
       const aiResponse = await this.getAiResponse(prompt);
-      console.log("AI Response:", aiResponse);
+      console.log("AI Response:", JSON.parse(aiResponse));
 
-      const updateResult = await this.interviewService.updateConversation({
-        id: interviewId,
-        userMessage: {
-          message: userResponse,
-          user: InterviewUser.User,
-        },
-        interviewerMessage: {
-          message: aiResponse,
-          user: InterviewUser.Ai,
-        },
-      });
+      const result = aiInterviewResponseSchema.safeParse(
+        JSON.parse(aiResponse)
+      );
 
-      if (updateResult.success)
+      if (result.success) {
+        const updateResult = await this.interviewService.updateConversation({
+          id: interviewId,
+          userMessage: {
+            message: userResponse,
+            user: InterviewUser.User,
+          },
+          interviewerMessage: {
+            message: result.data.nextQuestion,
+            user: InterviewUser.Ai,
+          },
+          aiFeedback: result.data.feedback,
+        });
+
+        if (updateResult.success)
+          return {
+            success: true,
+            data: updateResult.data,
+          };
+
         return {
-          success: true,
-          data: updateResult.data,
+          success: false,
+          message: updateResult.message,
         };
+      }
 
       return {
         success: false,
-        message: updateResult.message,
+        message: "Invalid ai response",
       };
     } catch (error) {
       console.log("Error in ongoing interview", error);
