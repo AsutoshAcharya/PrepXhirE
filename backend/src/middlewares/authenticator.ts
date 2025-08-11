@@ -3,18 +3,15 @@ import jwt from "jsonwebtoken";
 import { AuthUser, CustomRequest, JwtDecodeData } from "../types/type";
 import ResponseBuilder from "../utils/ResponseBuilder";
 import Some from "../utils/Some";
-import { Dependencies } from "../container";
-import { JobTitle, UserRole } from "../enums";
+import { UserRole } from "../enums";
 import toMongoObjectId from "../utils/toMongoObjectId";
 
 class Authenticator {
-  private readonly userModel;
   private readonly rb;
   private readonly unauthorizedMessage =
     "You are not authorized for this action";
 
-  constructor({ userModel }: Dependencies) {
-    this.userModel = userModel;
+  constructor() {
     this.rb = new ResponseBuilder({ type: "verify-user" });
   }
 
@@ -46,8 +43,8 @@ class Authenticator {
           _id: toMongoObjectId(id),
           fullName: name,
           email,
-          role: role as UserRole,
-          jobTitle: jobTitle as JobTitle,
+          role: role,
+          jobTitle: jobTitle,
           skills,
         } as AuthUser;
         next();
