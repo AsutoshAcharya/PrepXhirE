@@ -76,84 +76,63 @@ class InterviewService {
   }
 
   public async updateConversation(
-    updateCovnersationDto: UpsertConversationDto
+    updateConversationDto: UpsertConversationDto
   ): Promise<ServiceResult<IInterviewDocument>> {
-    const { id, message } = updateCovnersationDto;
+    const { id, userMessage, interviewerMessage } = updateConversationDto;
 
     try {
-      if (
-        [InterviewUser.Ai, InterviewUser.Interviewer].includes(message.user)
-      ) {
-        const insertedAiConversation =
-          await this.interviewModel.findByIdAndUpdate(
-            id,
-            {
-              $push: {
-                conversation: {
-                  question: {
-                    message: message.message,
-                    user: message.user,
-                  },
-                },
-              },
-              $inc: {
-                currentQuestionIndex: 1,
-              },
-            },
-            { new: true }
-          );
+      const interview = await this.interviewModel.findById(id);
 
-        if (insertedAiConversation)
-          return {
-            success: true,
-            data: insertedAiConversation,
-          };
-
-        return {
-          success: false,
-          message: "Error inserting ai conver sation",
-        };
-      } else if (message.user === InterviewUser.User) {
-        const interview = await this.interviewModel.findById(id);
-
-        if (interview) {
-          const lastIndex = interview.conversation.length - 1;
-          interview.conversation[lastIndex].answer = {
-            message: message.message,
-            user: message.user,
-            timestamp: moment.utc().toDate(),
-          };
-
-          const insertedUserResponse = await interview.save();
-
-          if (insertedUserResponse) {
-            return {
-              success: true,
-              data: insertedUserResponse,
-            };
-          }
-
-          return {
-            success: false,
-            message: "Error inserting user response",
-          };
-        }
+      if (!interview) {
         return {
           success: false,
           message: "Interview not found",
         };
       }
 
+      const lastIndex = interview.conversation.length - 1;
+
+      if (interview.conversation[lastIndex]) {
+        interview.conversation[lastIndex].answer = {
+          message: userMessage.message,
+          user: userMessage.user,
+          timestamp: moment.utc().toDate(),
+        };
+      } else {
+        return {
+          success: false,
+          message: "No previous question found to attach the user's answer.",
+        };
+      }
+
+      interview.conversation.push({
+        question: {
+          message: interviewerMessage.message,
+          user: interviewerMessage.user,
+          timestamp: moment.utc().toDate(),
+        },
+      });
+
+      interview.currentQuestionIndex += 1;
+
+      const updatedInterview = await interview.save();
+
+      if (updatedInterview)
+        return {
+          success: true,
+          data: updatedInterview,
+        };
+
       return {
         success: false,
-        message: "Something went wrong",
+        message: "Error updating interview conversation",
       };
     } catch (error) {
       return {
         success: false,
         message: ErrorUtils.getErrorMessage(
           error,
-          "Error getting interview data"
+          "Error updating interview conversation"
         ),
       };
     }

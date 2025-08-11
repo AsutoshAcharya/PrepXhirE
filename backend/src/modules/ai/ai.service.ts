@@ -24,6 +24,7 @@ import {
 } from "../../enums";
 import { IInterviewDocument } from "../../models/interview.model";
 import { ChatCompletionMessageParam } from "groq-sdk/resources/chat/completions";
+import moment from "moment";
 
 dotenv.config();
 class AiService {
@@ -325,53 +326,56 @@ Please continue the interview by asking the next appropriate question.
     userResponse,
   }: InterviewOnGoingDto): Promise<ServiceResult<IInterviewDocument>> {
     try {
-      const insertUserResponse = await this.interviewService.updateConversation(
-        {
-          id: interviewId,
-          message: { message: userResponse, user: InterviewUser.User },
-        }
-      );
+      const interviewServiceResult =
+        await this.interviewService.getInterviewById(interviewId);
 
-      if (insertUserResponse.success) {
-        const interviewServiceResult =
-          await this.interviewService.getInterviewById(interviewId);
-
-        if (interviewServiceResult.success) {
-          const prompt = this.getInterviewPrompt(
-            jobTitle,
-            candidateSkills,
-            interviewServiceResult.data
-          );
-
-          const rawContent = await this.getAiResponse(prompt);
-          console.log(rawContent);
-
-          const insertAiResponseResult =
-            await this.interviewService.updateConversation({
-              id: interviewId,
-              message: { message: rawContent, user: InterviewUser.Ai },
-            });
-          if (insertAiResponseResult.success)
-            return {
-              success: true,
-              data: insertAiResponseResult.data,
-            };
-
-          return {
-            success: false,
-            message: "Error inserting ai response",
-          };
-        }
-
+      if (!interviewServiceResult.success) {
         return {
           success: false,
           message: "Interview not found",
         };
       }
 
+      let temporaryConversation = [...interviewServiceResult.data.conversation];
+
+      const lastIndex = temporaryConversation.length - 1;
+      if (lastIndex >= 0) {
+        temporaryConversation[lastIndex].answer = {
+          message: userResponse,
+          user: InterviewUser.User,
+          timestamp: moment.utc().toDate(),
+        };
+      }
+
+      const prompt = this.getInterviewPrompt(jobTitle, candidateSkills, {
+        ...interviewServiceResult.data,
+        conversation: temporaryConversation,
+      } as IInterviewDocument);
+
+      const aiResponse = await this.getAiResponse(prompt);
+      console.log("AI Response:", aiResponse);
+
+      const updateResult = await this.interviewService.updateConversation({
+        id: interviewId,
+        userMessage: {
+          message: userResponse,
+          user: InterviewUser.User,
+        },
+        interviewerMessage: {
+          message: aiResponse,
+          user: InterviewUser.Ai,
+        },
+      });
+
+      if (updateResult.success)
+        return {
+          success: true,
+          data: updateResult.data,
+        };
+
       return {
         success: false,
-        message: insertUserResponse.message || "Something went wrong",
+        message: updateResult.message,
       };
     } catch (error) {
       console.log("Error in ongoing interview", error);
@@ -381,6 +385,7 @@ Please continue the interview by asking the next appropriate question.
       };
     }
   }
+
   public async interviewEnd() {}
 }
 

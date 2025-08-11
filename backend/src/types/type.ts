@@ -138,9 +138,13 @@ export type insertInterviewDto = {
 
 export type UpsertConversationDto = {
   id: Types.ObjectId;
-  message: {
+  userMessage: {
     message: string;
-    user: InterviewUser;
+    user: InterviewUser.User;
+  };
+  interviewerMessage: {
+    message: string;
+    user: InterviewUser.Ai | InterviewUser.Interviewer;
   };
 };
 
