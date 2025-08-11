@@ -344,7 +344,7 @@ Respond ONLY with the raw JSON object. Do NOT include any extra text, markdown, 
     interviewerId,
     sessionId,
     userResponse,
-  }: InterviewOnGoingDto): Promise<ServiceResult<any>> {
+  }: InterviewOnGoingDto): Promise<ServiceResult<IInterviewDocument>> {
     try {
       const interviewServiceResult =
         await this.interviewService.getInterviewById(interviewId);
