@@ -17,8 +17,32 @@ class Authenticator {
   private readonly unauthorizedMessage =
     "You are not authorized for this action";
   private readonly badRequestMessage = "Unauthorized: Missing token or userId";
+
   constructor() {
     this.rb = new ResponseBuilder({ type: "verify-user" });
+  }
+
+  private decodeToken(token: string): AuthUser | null {
+    try {
+      const decoded = jwt.verify(
+        token,
+        process.env.JWT as string
+      ) as JwtDecodeData;
+
+      if (decoded)
+        return {
+          _id: toMongoObjectId(decoded.id),
+          fullName: decoded.name,
+          email: decoded.email,
+          role: decoded.role,
+          jobTitle: decoded.jobTitle,
+          skills: decoded.skills,
+        } as AuthUser;
+
+      throw new Error("Decode error error");
+    } catch (error) {
+      return null;
+    }
   }
 
   public verifyToken = async (
@@ -33,28 +57,13 @@ class Authenticator {
       if (!token || !userId) {
         return this.rb.badRequest(this.badRequestMessage).send(res);
       }
+      const decoded = this.decodeToken(token);
 
-      jwt.verify(token, process.env.JWT as string, async (err, decoded) => {
-        if (err || !decoded) {
-          return this.rb.unauthorized().send(res);
-        }
+      if (!decoded) return this.rb.unauthorized().send(res);
 
-        const { id, role, email, skills, jobTitle, name } =
-          decoded as JwtDecodeData;
-        // const user = await this.userModel.findById(id);
+      req.user = decoded;
 
-        // if (!user) return this.rb.notFound("User not found").send(res);
-
-        req.user = {
-          _id: toMongoObjectId(id),
-          fullName: name,
-          email,
-          role: role,
-          jobTitle: jobTitle,
-          skills,
-        } as AuthUser;
-        next();
-      });
+      next();
     } catch {
       return this.rb.unauthorized().send(res);
     }
@@ -72,25 +81,13 @@ class Authenticator {
         return next(new Error(this.badRequestMessage));
       }
 
-      jwt.verify(token, process.env.JWT as string, (err, decoded) => {
-        if (err || !decoded) {
-          return next(new Error("Unauthorized: Invalid token"));
-        }
+      const decoded = this.decodeToken(token);
 
-        const { id, role, email, skills, jobTitle, name } =
-          decoded as JwtDecodeData;
+      if (!decoded) return next(new Error("Unauthorized"));
 
-        socket.user = {
-          _id: toMongoObjectId(id),
-          fullName: name,
-          email,
-          role: role,
-          jobTitle: jobTitle,
-          skills,
-        } as AuthUser;
+      socket.user = decoded;
 
-        next();
-      });
+      next();
     } catch {
       return next(new Error("Unauthorized"));
     }

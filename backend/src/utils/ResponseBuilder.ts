@@ -98,7 +98,11 @@ class ResponseBuilder {
 
   public send(res: Response): Response {
     const built = this.build();
-    return res.status(built.status).json(built);
+    const { originalUrl, method } = res.req;
+    const status = built.status;
+
+    console.log(`[${method}] ${originalUrl} - ${status}`);
+    return res.status(status).json(built);
   }
 }
 
