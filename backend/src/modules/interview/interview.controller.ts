@@ -12,11 +12,21 @@ class InterviewController {
   private readonly interviewService;
   private readonly aiService;
   private readonly rb;
-  constructor({ interviewService, aiService }: Dependencies) {
+  private readonly socketServer;
+
+  constructor({ interviewService, aiService, socketServer }: Dependencies) {
     this.interviewService = interviewService;
     this.aiService = aiService;
     this.rb = new ResponseBuilder({ type: "interview" });
+    this.socketServer = socketServer;
   }
+
+  public test = async (req: CustomRequest, res: Response) => {
+    if (!req.user) return this.rb.unauthorized().send(res);
+    // console.log(this.socketServer.io);
+    this.socketServer.io.emit("serverResponse", "Hello");
+    return this.rb.success({ message: "Socket test" }).send(res);
+  };
 
   public startInterview = async (req: CustomRequest, res: Response) => {
     if (!req.user) return this.rb.unauthorized().send(res);

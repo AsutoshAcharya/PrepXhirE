@@ -7,14 +7,8 @@ const controller = container.resolve("interviewController");
 const router = Router();
 
 //test route
-router.get(
-  "/test",
-  authenticator.verifyToken,
-  (req: CustomRequest, res: Response) => {
-    console.log(req.user);
-    return res.status(200).json(req.user);
-  }
-);
+router.get("/test", authenticator.verifyToken, controller.test);
+
 //handle for sessionId later for hosted sessions
 router
   .post("/start", authenticator.verifyToken, controller.startInterview)
