@@ -15,7 +15,7 @@ class SocketServer {
     this.port = Number(process.env.PORT) || 8800;
     this.io = new Server(this.port);
 
-    this.setupMiddlewres();
+    // this.setupMiddlewres();
     this.listenConnection();
   }
 

@@ -3,6 +3,7 @@ import { Model } from "mongoose";
 
 //middlewares
 import Authenticator from "../middlewares/authenticator";
+import SocketServer from "../sockets/SocketServer";
 
 //comtrollers
 import McqController from "../modules/mcq/mcq.controller";
@@ -37,6 +38,7 @@ import { InterviewModel, IInterviewDocument } from "../models/interview.model";
 
 export interface Dependencies {
   authenticator: Authenticator;
+  socketServer: SocketServer;
 
   authController: AuthController;
   mcqController: McqController;
@@ -62,6 +64,7 @@ const container: AwilixContainer<Dependencies> = createContainer();
 
 container.register({
   authenticator: asClass(Authenticator).singleton(),
+  socketServer: asClass(SocketServer).singleton(),
 
   authController: asClass(AuthController).singleton(),
   mcqController: asClass(McqController).singleton(),
