@@ -52,9 +52,9 @@ class Authenticator {
   ) => {
     try {
       const token = Some.String(req.headers["token"]);
-      const userId = Some.String(req.headers["user"]);
+      // const userId = Some.String(req.headers["user"]);
 
-      if (!token || !userId) {
+      if (!token) {
         return this.rb.badRequest(this.badRequestMessage).send(res);
       }
       const decoded = this.decodeToken(token);
@@ -75,9 +75,9 @@ class Authenticator {
   ) {
     try {
       const token = Some.String(socket.handshake.headers["token"]);
-      const userId = Some.String(socket.handshake.headers["user"]);
+      // const userId = Some.String(socket.handshake.headers["user"]);
 
-      if (!token || !userId) {
+      if (!token) {
         return next(new Error(this.badRequestMessage));
       }
 
