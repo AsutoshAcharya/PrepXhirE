@@ -1,6 +1,12 @@
 import { NextFunction, Response } from "express";
 import jwt from "jsonwebtoken";
-import { AuthUser, CustomRequest, JwtDecodeData } from "../types/type";
+import {
+  AuthUser,
+  CustomRequest,
+  CustomSocket,
+  JwtDecodeData,
+  SocketNextFunction,
+} from "../types/type";
 import ResponseBuilder from "../utils/ResponseBuilder";
 import Some from "../utils/Some";
 import { UserRole } from "../enums";
@@ -10,7 +16,7 @@ class Authenticator {
   private readonly rb;
   private readonly unauthorizedMessage =
     "You are not authorized for this action";
-
+  private readonly badRequestMessage = "Unauthorized: Missing token or userId";
   constructor() {
     this.rb = new ResponseBuilder({ type: "verify-user" });
   }
@@ -25,7 +31,7 @@ class Authenticator {
       const userId = Some.String(req.headers["user"]);
 
       if (!token || !userId) {
-        return this.rb.unauthorized().send(res);
+        return this.rb.badRequest(this.badRequestMessage).send(res);
       }
 
       jwt.verify(token, process.env.JWT as string, async (err, decoded) => {
@@ -53,6 +59,42 @@ class Authenticator {
       return this.rb.unauthorized().send(res);
     }
   };
+
+  public async verifySocketToken(
+    socket: CustomSocket,
+    next: SocketNextFunction
+  ) {
+    try {
+      const token = Some.String(socket.handshake.headers["token"]);
+      const userId = Some.String(socket.handshake.headers["user"]);
+
+      if (!token || !userId) {
+        return next(new Error(this.badRequestMessage));
+      }
+
+      jwt.verify(token, process.env.JWT as string, (err, decoded) => {
+        if (err || !decoded) {
+          return next(new Error("Unauthorized: Invalid token"));
+        }
+
+        const { id, role, email, skills, jobTitle, name } =
+          decoded as JwtDecodeData;
+
+        socket.user = {
+          _id: toMongoObjectId(id),
+          fullName: name,
+          email,
+          role: role,
+          jobTitle: jobTitle,
+          skills,
+        } as AuthUser;
+
+        next();
+      });
+    } catch {
+      return next(new Error("Unauthorized"));
+    }
+  }
 
   public hasRole = (...allowedRoles: UserRole[]) => {
     return (req: CustomRequest, res: Response, next: NextFunction) => {

@@ -1,4 +1,4 @@
-import { Request } from "express";
+import { NextFunction, Request } from "express";
 import { IUserDocument } from "../models/user.model";
 import { JwtPayload } from "jsonwebtoken";
 import { CreateMcqDto } from "../modules/mcq/mcq.schema";
@@ -15,6 +15,7 @@ import {
   RoundType,
   UserRole,
 } from "../enums";
+import { Socket } from "socket.io";
 
 export type ResponseStruct = {
   success: boolean | null;
@@ -164,3 +165,7 @@ export type InterviewOnGoingDto = InterviewStartDto & {
   interviewId: Types.ObjectId;
   userResponse: string;
 };
+export interface CustomSocket extends Socket {
+  user?: AuthUser;
+}
+export type SocketNextFunction = (err?: Error) => void;
