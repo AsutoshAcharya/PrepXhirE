@@ -11,6 +11,7 @@ import ResponseBuilder from "../utils/ResponseBuilder";
 import Some from "../utils/Some";
 import { UserRole } from "../enums";
 import toMongoObjectId from "../utils/toMongoObjectId";
+import ErrorUtils from "../utils/ErrorUtils";
 
 class Authenticator {
   private readonly rb;
@@ -23,26 +24,22 @@ class Authenticator {
   }
 
   private decodeToken(token: string): AuthUser | null {
-    try {
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT as string
-      ) as JwtDecodeData;
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT as string
+    ) as JwtDecodeData;
+    console.log(decoded);
+    if (decoded)
+      return {
+        _id: toMongoObjectId(decoded.id),
+        fullName: decoded.name,
+        email: decoded.email,
+        role: decoded.role,
+        jobTitle: decoded.jobTitle,
+        skills: decoded.skills,
+      } as AuthUser;
 
-      if (decoded)
-        return {
-          _id: toMongoObjectId(decoded.id),
-          fullName: decoded.name,
-          email: decoded.email,
-          role: decoded.role,
-          jobTitle: decoded.jobTitle,
-          skills: decoded.skills,
-        } as AuthUser;
-
-      throw new Error("Decode error error");
-    } catch (error) {
-      return null;
-    }
+    return null;
   }
 
   public verifyToken = async (
@@ -69,10 +66,10 @@ class Authenticator {
     }
   };
 
-  public async verifySocketToken(
+  public verifySocketToken = async (
     socket: CustomSocket,
     next: SocketNextFunction
-  ) {
+  ) => {
     try {
       const token = Some.String(socket.handshake.headers["token"]);
       // const userId = Some.String(socket.handshake.headers["user"]);
@@ -80,7 +77,7 @@ class Authenticator {
       if (!token) {
         return next(new Error(this.badRequestMessage));
       }
-
+      console.log("token", token);
       const decoded = this.decodeToken(token);
 
       if (!decoded) return next(new Error("Unauthorized"));
@@ -88,10 +85,11 @@ class Authenticator {
       socket.user = decoded;
 
       next();
-    } catch {
-      return next(new Error("Unauthorized"));
+    } catch (err) {
+      // console.log(err);
+      return ErrorUtils.getErrorMessage(err, "Unauthorized");
     }
-  }
+  };
 
   public hasRole = (...allowedRoles: UserRole[]) => {
     return (req: CustomRequest, res: Response, next: NextFunction) => {

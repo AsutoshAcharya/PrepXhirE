@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import { Dependencies } from "../container";
 import { CustomSocket } from "../types/type";
 import { Server as HttpServer } from "http";
+import { SocketRooms } from "../enums";
+import { Types } from "mongoose";
 dotenv.config();
 
 class SocketServer {
@@ -21,12 +23,24 @@ class SocketServer {
       },
     });
 
-    // this.setupMiddlewres();
+    this.setupMiddlewres();
     this.listenConnection();
   }
 
   private setupMiddlewres() {
     this.io.use(this.authenticator.verifySocketToken);
+  }
+
+  public listenInterviewRoomJoins(socket: CustomSocket) {
+    socket.on(
+      SocketRooms.joinInterviewRoom,
+      ({}: {
+        candidateId: Types.ObjectId;
+        interviewId: Types.ObjectId;
+        sessionId?: Types.ObjectId;
+        interviewerId?: Types.ObjectId;
+      }) => {}
+    );
   }
 
   private listenConnection() {
@@ -38,6 +52,8 @@ class SocketServer {
       socket.on("message", (data) => {
         console.log(data);
       });
+
+      this.listenInterviewRoomJoins(socket);
 
       socket.on("disconnect", () => {
         console.log(`User disconnected: ${socket.id}`);

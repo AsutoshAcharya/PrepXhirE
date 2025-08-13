@@ -63,3 +63,7 @@ export enum InterviewUser {
   Ai = "ai",
   Interviewer = "interviewer",
 }
+
+export enum SocketRooms {
+  joinInterviewRoom = "joinInterviewRoom",
+}
