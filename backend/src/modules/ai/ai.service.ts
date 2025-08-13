@@ -50,6 +50,28 @@ class AiService {
     });
   }
 
+  public async getAiResponse(
+    prompt: string,
+    systemMessage?: string
+  ): Promise<string> {
+    const messages: ChatCompletionMessageParam[] = [
+      { role: "system", content: Some.String(systemMessage) },
+      { role: "user", content: prompt },
+    ];
+
+    const response = await this.groq.chat.completions.create({
+      messages: [messages[1]],
+      model: "llama3-70b-8192",
+      max_tokens: 2048,
+      temperature: 0.8,
+      top_p: 1,
+      stream: false,
+    });
+
+    const rawContent = response.choices[0]?.message?.content;
+    return Some.String(rawContent);
+  }
+
   private getMcqPrompt(
     jobTitle: JobTitle,
     difficulty: Difficulty,
@@ -76,70 +98,6 @@ Requirements:
 
 Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, or explanation.
 `;
-  }
-
-  private getMcqFeedbackPrompt(data: Array<AiFeedbackDto>): string {
-    let corectMcqs: Array<AiFeedbackDto> = [];
-    let incorrectMcqs: Array<AiFeedbackDto> = [];
-    data.forEach((d) => {
-      if (d.isCorrect) corectMcqs.push(d);
-      else incorrectMcqs.push(d);
-    });
-
-    const topicStats = (items: typeof data) => {
-      const topicCount: Record<string, number> = {};
-      items.forEach((item) => {
-        topicCount[item.questionTopic.toLowerCase()] =
-          (topicCount[item.questionTopic.toLowerCase()] || 0) + 1;
-      });
-      return topicCount;
-    };
-
-    const strengths = topicStats(corectMcqs);
-    const weaknesses = topicStats(incorrectMcqs);
-
-    const summarizeTopics = (topics: Record<string, number>) => {
-      const entries = Object.entries(topics);
-      return entries.length === 0
-        ? "None"
-        : entries
-            .sort((a, b) => b[1] - a[1])
-            .map(([topic, count]) => `${topic} (${count})`)
-            .join(", ");
-    };
-
-    const intro = `Analyze the user's performance on a multiple-choice quiz. Provide a brief summary of their overall performance, including areas of strength and areas to improve. Keep the tone encouraging and professional.\n\n`;
-
-    const summaryData =
-      `Total Questions: ${data.length}\n` +
-      `Correct Answers: ${corectMcqs.length}\n` +
-      `Incorrect Answers: ${incorrectMcqs.length}\n` +
-      `Strong Topics: ${summarizeTopics(strengths)}\n` +
-      `Needs Improvement: ${summarizeTopics(weaknesses)}\n`;
-
-    return intro + summaryData;
-  }
-
-  public async getAiResponse(
-    prompt: string,
-    systemMessage?: string
-  ): Promise<string> {
-    const messages: ChatCompletionMessageParam[] = [
-      { role: "system", content: Some.String(systemMessage) },
-      { role: "user", content: prompt },
-    ];
-
-    const response = await this.groq.chat.completions.create({
-      messages: [messages[1]],
-      model: "llama3-70b-8192",
-      max_tokens: 2048,
-      temperature: 0.8,
-      top_p: 1,
-      stream: false,
-    });
-
-    const rawContent = response.choices[0]?.message?.content;
-    return Some.String(rawContent);
   }
 
   public async generateMcqQuestions({
@@ -228,6 +186,48 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
         message: ErrorUtils.getErrorMessage(error, "Unknown error occurred"),
       };
     }
+  }
+
+  private getMcqFeedbackPrompt(data: Array<AiFeedbackDto>): string {
+    let corectMcqs: Array<AiFeedbackDto> = [];
+    let incorrectMcqs: Array<AiFeedbackDto> = [];
+    data.forEach((d) => {
+      if (d.isCorrect) corectMcqs.push(d);
+      else incorrectMcqs.push(d);
+    });
+
+    const topicStats = (items: typeof data) => {
+      const topicCount: Record<string, number> = {};
+      items.forEach((item) => {
+        topicCount[item.questionTopic.toLowerCase()] =
+          (topicCount[item.questionTopic.toLowerCase()] || 0) + 1;
+      });
+      return topicCount;
+    };
+
+    const strengths = topicStats(corectMcqs);
+    const weaknesses = topicStats(incorrectMcqs);
+
+    const summarizeTopics = (topics: Record<string, number>) => {
+      const entries = Object.entries(topics);
+      return entries.length === 0
+        ? "None"
+        : entries
+            .sort((a, b) => b[1] - a[1])
+            .map(([topic, count]) => `${topic} (${count})`)
+            .join(", ");
+    };
+
+    const intro = `Analyze the user's performance on a multiple-choice quiz. Provide a brief summary of their overall performance, including areas of strength and areas to improve. Keep the tone encouraging and professional.\n\n`;
+
+    const summaryData =
+      `Total Questions: ${data.length}\n` +
+      `Correct Answers: ${corectMcqs.length}\n` +
+      `Incorrect Answers: ${incorrectMcqs.length}\n` +
+      `Strong Topics: ${summarizeTopics(strengths)}\n` +
+      `Needs Improvement: ${summarizeTopics(weaknesses)}\n`;
+
+    return intro + summaryData;
   }
 
   public async getMcqFeedBack(
