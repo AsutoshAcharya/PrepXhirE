@@ -64,6 +64,10 @@ export enum InterviewUser {
   Interviewer = "interviewer",
 }
 
-export enum SocketRooms {
-  joinInterviewRoom = "joinInterviewRoom",
+export enum Event {
+  Connection = "connection",
+  Disconnect = "disconnect",
+  JoinInterviewRoom = "joinInterviewRoom",
+  InterviewMessage = "interviewMessage",
+  Error = "error",
 }

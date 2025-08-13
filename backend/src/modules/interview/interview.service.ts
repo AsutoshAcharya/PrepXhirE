@@ -4,7 +4,7 @@ import { InterviewUser } from "../../enums";
 import {
   insertInterviewDto,
   ServiceResult,
-  UpsertConversationDto,
+  UpdateConversationDto,
 } from "../../types/type";
 import ErrorUtils from "../../utils/ErrorUtils";
 import { IInterviewDocument } from "../../models/interview.model";
@@ -76,7 +76,7 @@ class InterviewService {
   }
 
   public async updateConversation(
-    updateConversationDto: UpsertConversationDto
+    updateConversationDto: UpdateConversationDto
   ): Promise<ServiceResult<IInterviewDocument>> {
     const { id, userMessage, interviewerMessage, aiFeedback } =
       updateConversationDto;

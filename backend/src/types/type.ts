@@ -141,7 +141,7 @@ export type insertInterviewDto = {
   interviewerId?: Types.ObjectId;
 };
 
-export type UpsertConversationDto = {
+export type UpdateConversationDto = {
   id: Types.ObjectId;
   userMessage: {
     message: string;
@@ -169,3 +169,10 @@ export interface CustomSocket extends Socket {
   user?: AuthUser;
 }
 export type SocketNextFunction = (err?: Error) => void;
+
+export type JoinRoomDto = {
+  candidateId: string;
+  interviewId: string;
+  sessionId?: string;
+  interviewerId?: string;
+};

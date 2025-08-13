@@ -9,6 +9,7 @@ import {
   InterviewOnGoingDto,
   InterviewStartDto,
   ServiceResult,
+  UpdateConversationDto,
 } from "../../types/type";
 import { Dependencies } from "../../container";
 
@@ -32,11 +33,13 @@ class AiService {
   private readonly groq;
   private readonly mcqService;
   private readonly interviewService;
+  private readonly socketServer;
 
-  constructor({ mcqService, interviewService }: Dependencies) {
+  constructor({ mcqService, interviewService, socketServer }: Dependencies) {
     this.mcqService = mcqService;
     this.interviewService = interviewService;
-
+    this.socketServer = socketServer;
+    console.log("here");
     this.groq = new Groq({
       apiKey: process.env.GROQ_API_KEY,
     });
@@ -373,14 +376,14 @@ Respond ONLY with the raw JSON object. Do NOT include any extra text, markdown, 
       } as IInterviewDocument);
 
       const aiResponse = await this.getAiResponse(prompt);
-      console.log("AI Response:", JSON.parse(aiResponse));
+      // console.log("AI Response:", JSON.parse(aiResponse));
 
       const result = aiInterviewResponseSchema.safeParse(
         JSON.parse(aiResponse)
       );
 
       if (result.success) {
-        const updateResult = await this.interviewService.updateConversation({
+        const updateConversationDto: UpdateConversationDto = {
           id: interviewId,
           userMessage: {
             message: userResponse,
@@ -391,7 +394,23 @@ Respond ONLY with the raw JSON object. Do NOT include any extra text, markdown, 
             user: InterviewUser.Ai,
           },
           aiFeedback: result.data.feedback,
+        };
+
+        this.socketServer.sendInterviewResponse({
+          joinRoomDto: {
+            candidateId: String(candidateId),
+            interviewId: String(interviewId),
+          },
+          message: pick(
+            updateConversationDto,
+            "interviewerMessage",
+            "aiFeedback"
+          ),
         });
+
+        const updateResult = await this.interviewService.updateConversation(
+          updateConversationDto
+        );
 
         if (updateResult.success)
           return {
