@@ -8,7 +8,7 @@ import {
 } from "../types/type";
 import { Server as HttpServer } from "http";
 import { Event } from "../enums";
-import { Types } from "mongoose";
+
 dotenv.config();
 
 class SocketServer {
@@ -35,7 +35,7 @@ class SocketServer {
     this.io.use(this.authenticator.verifySocketToken);
   }
 
-  private getJoinInterviewRoomId = ({
+  private getInterviewRoomId = ({
     candidateId,
     interviewId,
     sessionId = "", //later have to handle for hosted sessions
@@ -49,7 +49,7 @@ class SocketServer {
     joinRoomDto: JoinRoomDto;
     message: Pick<UpdateConversationDto, "interviewerMessage" | "aiFeedback">;
   }) {
-    const roomId = this.getJoinInterviewRoomId(joinRoomDto);
+    const roomId = this.getInterviewRoomId(joinRoomDto);
     this.io.to(roomId).emit(Event.InterviewMessage, message);
   }
 
@@ -62,7 +62,7 @@ class SocketServer {
         });
       }
 
-      const roomId = this.getJoinInterviewRoomId(joinRoomDto);
+      const roomId = this.getInterviewRoomId(joinRoomDto);
       console.log(roomId);
       socket.join(roomId);
       console.log(`${joinRoomDto.candidateId} user joined room ${roomId}`);
