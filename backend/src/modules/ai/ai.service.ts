@@ -262,7 +262,7 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
       : "No conversation has started yet.";
   }
 
-  public getInterviewPrompt(
+  private getInterviewPrompt(
     jobTitle: JobTitle,
     candidateSkills: string[],
     data?: IInterviewDocument
@@ -449,7 +449,7 @@ Respond ONLY with the raw JSON object. Do NOT include any extra text, markdown, 
     }
   }
 
-  public getInterviewFeedbackPrompt({
+  private getInterviewFeedbackPrompt({
     skills,
     interviewData,
     jobTitle,
