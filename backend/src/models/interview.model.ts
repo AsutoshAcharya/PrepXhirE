@@ -36,7 +36,7 @@ const QAConversationSchema = new Schema(
   { _id: false }
 );
 
-const InterviewSchema = new Schema(
+const interviewSchema = new Schema(
   {
     candidateId: {
       type: Types.ObjectId,
@@ -59,17 +59,11 @@ const InterviewSchema = new Schema(
       type: Number,
       default: 0,
     },
-    interviewRecordUrl: {
-      type: String,
-    },
-    overallAiFeedback: {
-      type: String,
-    },
   },
   { timestamps: true }
 );
 
-export type InterviewSchemaType = InferSchemaType<typeof InterviewSchema>;
+export type InterviewSchemaType = InferSchemaType<typeof interviewSchema>;
 
 export interface IInterviewDocument extends InterviewSchemaType {
   _id: Types.ObjectId;
@@ -77,5 +71,5 @@ export interface IInterviewDocument extends InterviewSchemaType {
 
 export const InterviewModel = model<IInterviewDocument>(
   "interview",
-  InterviewSchema
+  interviewSchema
 );

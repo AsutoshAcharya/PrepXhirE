@@ -1,5 +1,5 @@
 import { Schema, Types, InferSchemaType, model } from "mongoose";
-import { Mode, RoundType } from "../enums";
+import { CollectionNames, Mode, RoundType } from "../enums";
 
 const mcqResponseSchema = new Schema(
   {
@@ -30,6 +30,25 @@ const mcqDataSchema = new Schema(
   },
   { _id: false }
 );
+
+const interviewDataSchema = new Schema({
+  interviewId: {
+    type: Types.ObjectId,
+    ref: CollectionNames.Interview,
+    required: true,
+  },
+  score: {
+    type: Number,
+    required: true,
+  },
+  interviewRecordUrl: {
+    type: String,
+  },
+  overallAiFeedback: {
+    type: String,
+    required: true,
+  },
+});
 
 const submissionSchema = new Schema(
   {
@@ -62,6 +81,10 @@ const submissionSchema = new Schema(
     },
     mcqData: {
       type: mcqDataSchema,
+      required: false,
+    },
+    interviewData: {
+      type: interviewDataSchema,
       required: false,
     },
   },

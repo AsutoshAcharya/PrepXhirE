@@ -16,6 +16,7 @@ import {
   UserRole,
 } from "../enums";
 import { Socket } from "socket.io";
+import { IInterviewDocument } from "../models/interview.model";
 
 export type ResponseStruct = {
   success: boolean | null;
@@ -86,6 +87,12 @@ export type InsertSubmissionDto = {
     score: number;
     responses: Array<InsertResponseDto>;
     aiFeedBack: string;
+  };
+  interviewData?: {
+    interviewId: Types.ObjectId;
+    score: number;
+    interviewRecordUrl?: string;
+    overallAiFeedback: string;
   };
 };
 
@@ -175,4 +182,10 @@ export type JoinRoomDto = {
   interviewId: string;
   sessionId?: string;
   interviewerId?: string;
+};
+
+export type InterviewAiFeedbackDto = {
+  interviewData: IInterviewDocument;
+  jobTitle: JobTitle;
+  skills: Array<string>;
 };

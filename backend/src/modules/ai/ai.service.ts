@@ -6,6 +6,8 @@ import {
   AiFeedbackDto,
   GenerateMcqDto,
   InsertDto,
+  InsertSubmissionDto,
+  InterviewAiFeedbackDto,
   InterviewOnGoingDto,
   InterviewStartDto,
   ServiceResult,
@@ -26,7 +28,10 @@ import {
 import { IInterviewDocument } from "../../models/interview.model";
 import { ChatCompletionMessageParam } from "groq-sdk/resources/chat/completions";
 import moment from "moment";
-import { aiInterviewResponseSchema } from "./ai.schema";
+import {
+  aiInterviewResponseSchema,
+  aiOverallFeedbackResponseSchema,
+} from "./ai.schema";
 
 dotenv.config();
 class AiService {
@@ -113,52 +118,6 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
       `Needs Improvement: ${summarizeTopics(weaknesses)}\n`;
 
     return intro + summaryData;
-  }
-
-  public getInterviewPrompt(
-    jobTitle: JobTitle,
-    candidateSkills: string[],
-    data?: IInterviewDocument
-  ): string {
-    const skillsList = candidateSkills.join(", ");
-    const conversation = data
-      ? data.conversation
-          .map((pair, index) => {
-            const question = pair.question?.message || "";
-            const answer = pair.answer?.message || "[No answer yet]";
-            return `Q${index + 1}: ${question}\nA${index + 1}: ${answer}`;
-          })
-          .join("\n\n")
-      : "No conversation has started yet.";
-
-    const prompt = `
-You are a professional interviewer at **PrepXhirE**, an AI-driven interview platform built to simulate real-world interviews and evaluate candidates.
-
-Candidate is applying for the role of **${jobTitle}** with these skills: ${skillsList}.
-
-Below is the current conversation:
-
-${conversation}
-
-Your task is to:
-1. Briefly **analyze the candidate's most recent answer**.
-2. Offer **concise, professional feedback** (positive or constructive).
-3. Then, **ask the next interview question** based on the candidate's response, skills, and job role.
-
-- Keep feedback helpful and professional (2-3 sentences max).
-- Keep the tone friendly yet evaluative.
-- If this is the first question, return an empty string for "feedback".
-- Response must follow this format:
-
-{
-  "feedback": "string",
-  "nextQuestion":"string"
-}
-
-Respond ONLY with the raw JSON object. Do NOT include any extra text, markdown, or explanation.
-`;
-
-    return prompt.trim();
   }
 
   public async getAiResponse(
@@ -289,6 +248,56 @@ Respond ONLY with the raw JSON object. Do NOT include any extra text, markdown, 
         message: ErrorUtils.getErrorMessage(error, "Error generating feedback"),
       };
     }
+  }
+
+  private getInterviewConversation(data?: IInterviewDocument): string {
+    return data
+      ? data.conversation
+          .map((pair, index) => {
+            const question = pair.question?.message || "";
+            const answer = pair.answer?.message || "[No answer yet]";
+            return `Q${index + 1}: ${question}\nA${index + 1}: ${answer}`;
+          })
+          .join("\n\n")
+      : "No conversation has started yet.";
+  }
+
+  public getInterviewPrompt(
+    jobTitle: JobTitle,
+    candidateSkills: string[],
+    data?: IInterviewDocument
+  ): string {
+    const skillsList = candidateSkills.join(", ");
+    const conversation = this.getInterviewConversation(data);
+
+    const prompt = `
+You are a professional interviewer at **PrepXhirE**, an AI-driven interview platform built to simulate real-world interviews and evaluate candidates.
+
+Candidate is applying for the role of **${jobTitle}** with these skills: ${skillsList}.
+
+Below is the current conversation:
+
+${conversation}
+
+Your task is to:
+1. Briefly **analyze the candidate's most recent answer**.
+2. Offer **concise, professional feedback** (positive or constructive).
+3. Then, **ask the next interview question** based on the candidate's response, skills, and job role.
+
+- Keep feedback helpful and professional (2-3 sentences max).
+- Keep the tone friendly yet evaluative.
+- If this is the first question, return an empty string for "feedback".
+- Response must follow this format:
+
+{
+  "feedback": "string",
+  "nextQuestion":"string"
+}
+
+Respond ONLY with the raw JSON object. Do NOT include any extra text, markdown, or explanation.
+`;
+
+    return prompt.trim();
   }
 
   public async startInterview({
@@ -437,7 +446,92 @@ Respond ONLY with the raw JSON object. Do NOT include any extra text, markdown, 
     }
   }
 
-  public async interviewEnd() {}
+  public getInterviewFeedbackPrompt({
+    skills,
+    interviewData,
+    jobTitle,
+  }: InterviewAiFeedbackDto): string {
+    const skillsList = skills.join(", ");
+    const conversation = this.getInterviewConversation(interviewData);
+
+    return `
+You are a professional interviewer at **PrepXhirE**, an AI-driven interview platform built to simulate real-world interviews and evaluate candidates.
+
+The candidate was interviewed for the role of "${jobTitle}" with the following skills: ${skillsList}.
+
+Here is the full interview conversation (questions and candidate's answers):
+---
+${conversation}
+---
+
+Your evaluation criteria:
+- Technical correctness and depth of answers
+- Problem-solving approach
+- Communication skills
+- Relevance to the job role and skills
+- Ability to explain reasoning clearly
+
+Your task:
+1. Give an overall performance score out of 100.
+2. Analyze the user's performance. Provide a brief summary of their overall performance, including areas of strength and areas to improve. Keep the tone encouraging and ensure your feedback is professional, objective, and tailored to the given skills and job title..
+
+- Response must follow this format:
+
+{
+  "score": string,
+  "overallAiFeedback": string,
+}
+
+Respond ONLY with the raw JSON object. Do NOT include any extra text, markdown, or explanation.
+
+  `;
+  }
+
+  public async getInterviewFeedback(
+    interviewAiFeedbackDto: InterviewAiFeedbackDto
+  ): Promise<
+    ServiceResult<
+      Pick<
+        NonNullable<InsertSubmissionDto["interviewData"]>,
+        "score" | "overallAiFeedback"
+      >
+    >
+  > {
+    const prompt = this.getInterviewFeedbackPrompt(interviewAiFeedbackDto);
+
+    try {
+      const rawContent = await this.getAiResponse(prompt);
+      const result = aiOverallFeedbackResponseSchema.safeParse(
+        JSON.parse(rawContent)
+      );
+      // console.log(rawContent);
+      // console.log(result);
+      if (result.success) {
+        console.log(result.data);
+        return {
+          success: true,
+          data: {
+            score: Some.Number(result.data.score),
+            overallAiFeedback: Some.String(result.data.overallAiFeedback),
+          },
+        };
+      }
+
+      return {
+        success: false,
+        message: ErrorUtils.getErrorMessage(
+          result.error,
+          "Invalid ai response"
+        ),
+      };
+    } catch (error) {
+      console.log(error);
+      return {
+        success: false,
+        message: ErrorUtils.getErrorMessage(error, "Something went wrong!"),
+      };
+    }
+  }
 }
 
 export default AiService;

@@ -4,7 +4,7 @@ export enum CollectionNames {
   Submissions = "submissions",
   HostedSession = "hostedSession",
   McqRound = "mcqRound",
-  AiInterview = "aiinterview",
+  Interview = "interview",
 }
 
 export enum JobTitle {
