@@ -287,6 +287,9 @@ Your task is to:
 - Keep feedback helpful and professional (2-3 sentences max).
 - Keep the tone friendly yet evaluative.
 - If this is the first question, return an empty string for "feedback".
+- If this is the **final question (10th-15th)**, make the question a **closing remark** like:
+   - "That brings us to the end of this interview. Thank you for your time!"
+   - Or "Thanks for participating. We appreciate your responses."
 - Response must follow this format:
 
 {
