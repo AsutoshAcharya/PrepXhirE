@@ -73,12 +73,6 @@ class SocketServer {
     this.io.on(Event.Connection, (socket: CustomSocket) => {
       console.log(`User connected: ${socket.id}`);
 
-      //user sends this event
-
-      // socket.on("message", (data) => {
-      //   console.log(data);
-      // });
-
       this.listenInterviewRoomJoins(socket);
 
       socket.on(Event.Disconnect, () => {
