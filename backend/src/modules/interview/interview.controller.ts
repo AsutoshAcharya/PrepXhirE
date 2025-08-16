@@ -19,18 +19,20 @@ class InterviewController {
   private readonly rb;
   private readonly socketServer;
   private readonly submissionService;
-
+  private readonly hostedSessionService;
   constructor({
     interviewService,
     aiService,
     socketServer,
     submissionService,
+    hostedSessionService,
   }: Dependencies) {
     this.interviewService = interviewService;
     this.aiService = aiService;
     this.rb = new ResponseBuilder({ type: "interview" });
     this.socketServer = socketServer;
     this.submissionService = submissionService;
+    this.hostedSessionService = hostedSessionService;
   }
 
   public test = async (req: CustomRequest, res: Response) => {
@@ -43,17 +45,39 @@ class InterviewController {
   public startInterview = async (req: CustomRequest, res: Response) => {
     if (!req.user) return this.rb.unauthorized().send(res);
 
-    const { jobTitle, skills } = req.query;
+    const { sessionId } = req.body;
 
-    const queryData = {
-      jobTitle: Some.String(jobTitle || req.user?.jobTitle) as JobTitle,
-      //   skills: Some.String(skills).split(","),
-    };
+    if (sessionId && !isValidObjectId(sessionId))
+      return this.rb.badRequest("Invalid session id").send(res);
+
+    let jobTitle = Some.String(req.user?.jobTitle) as JobTitle;
+    let skills = req.user.skills;
+
+    if (sessionId) {
+      const sessionResult = await this.hostedSessionService.getSessionById(
+        toMongoObjectId(sessionId)
+      );
+
+      if (sessionResult.success) {
+        if (
+          !sessionResult.data.candidates.some(
+            (c) => String(c.candidateId) === String(req.user?._id)
+          )
+        )
+          return this.rb.badRequest("You can not join this session").send(res);
+
+        jobTitle = sessionResult.data.jobTitle;
+        skills = sessionResult.data.requiredSkills;
+      } else this.rb.serverError(sessionResult.message).send(res);
+    }
+
     const aiServiceResult = await this.aiService.startInterview({
       candidateId: req.user._id,
-      jobTitle: queryData.jobTitle,
-      candidateSkills: req.user.skills,
+      jobTitle: jobTitle,
+      candidateSkills: skills,
+      ...(sessionId && { sessionId: toMongoObjectId(sessionId) }),
     });
+
     if (aiServiceResult.success)
       return this.rb
         .success({

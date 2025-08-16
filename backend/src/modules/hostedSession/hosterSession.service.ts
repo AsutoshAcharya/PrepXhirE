@@ -215,6 +215,28 @@ class HostedSessionService {
       };
     }
   }
+
+  public async getSessionById(
+    id: Types.ObjectId
+  ): Promise<ServiceResult<IHostedSessionDocument>> {
+    try {
+      const session = await this.hostedSessionModel.findOne(id);
+      if (session)
+        return {
+          success: true,
+          data: session,
+        };
+      return {
+        success: false,
+        message: "Session not found",
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: ErrorUtils.getErrorMessage(error, "Error getting session"),
+      };
+    }
+  }
 }
 
 export default HostedSessionService;
