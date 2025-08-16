@@ -125,13 +125,6 @@ class HostedSessionController {
   public getOwnHostedSessions = async (req: CustomRequest, res: Response) => {
     if (!req.user) return this.rb.unauthorized().send(res);
 
-    // const interviewerId = Some.String(req.params.interviewerId);
-    // if (!interviewerId)
-    //   return this.rb.badRequest("Missing interviewerId").send(res);
-
-    // if (!isValidObjectId(interviewerId))
-    //   return this.rb.badRequest("Invalid interviewerId").send(res);
-
     const hostedSessionServiceResult =
       await this.hostedSessionService.getSessionsByInterviewerId(req.user._id);
 

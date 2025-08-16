@@ -389,7 +389,7 @@ Respond ONLY with the raw JSON object. Do NOT include any extra text, markdown, 
       } as IInterviewDocument);
 
       const aiResponse = await this.getAiResponse(prompt);
-      // console.log("AI Response:", JSON.parse(aiResponse));
+      
 
       const result = aiInterviewResponseSchema.safeParse(
         JSON.parse(aiResponse)
