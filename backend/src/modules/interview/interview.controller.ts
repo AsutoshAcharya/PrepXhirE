@@ -101,19 +101,16 @@ class InterviewController {
 
     const result = onGoingInterviewSchema.safeParse(req.body);
     if (result.success) {
-      const queryData = {
-        jobTitle: Some.String(
-          result.data.jobTitle || req.user?.jobTitle
-        ) as JobTitle,
-        //   skills: Some.String(skills).split(","),
+      const bodyData = {
+        userResponse: result.data.userResponse,
+        jobTitle: result.data.jobTitle || req.user?.jobTitle,
+        candidateSkills: result.data.skills || req.user.skills,
       };
 
       const aiServiceResult = await this.aiService.onGoingInterview({
         interviewId: toMongoObjectId(interviewId),
         candidateId: req.user._id,
-        jobTitle: queryData.jobTitle,
-        candidateSkills: req.user.skills,
-        userResponse: result.data.userResponse,
+        ...bodyData,
       });
 
       if (aiServiceResult.success)

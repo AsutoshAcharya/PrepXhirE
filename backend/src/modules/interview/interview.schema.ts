@@ -3,8 +3,9 @@ import { JobTitle, Mode } from "../../enums";
 
 export const onGoingInterviewSchema = z.object({
   userResponse: z.string().min(10),
-  jobTitle: z.enum(JobTitle),
-  //   skills: z.array(z.string()).min(1),
+  // send both for hosted session interviews
+  jobTitle: z.enum(JobTitle).optional(),
+  skills: z.array(z.string()).optional(), //requiredSkills
 });
 export const interviewSubmitSchema = z.object({
   sessionId: z.string().optional(),
