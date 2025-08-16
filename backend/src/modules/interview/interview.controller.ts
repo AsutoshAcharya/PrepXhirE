@@ -53,6 +53,8 @@ class InterviewController {
     let jobTitle = Some.String(req.user?.jobTitle) as JobTitle;
     let skills = req.user.skills;
 
+    let interviewerId;
+
     if (sessionId) {
       const sessionResult = await this.hostedSessionService.getSessionById(
         toMongoObjectId(sessionId)
@@ -68,6 +70,7 @@ class InterviewController {
 
         jobTitle = sessionResult.data.jobTitle;
         skills = sessionResult.data.requiredSkills;
+        interviewerId = sessionResult.data.interviewerId;
       } else this.rb.serverError(sessionResult.message).send(res);
     }
 
@@ -76,6 +79,7 @@ class InterviewController {
       jobTitle: jobTitle,
       candidateSkills: skills,
       ...(sessionId && { sessionId: toMongoObjectId(sessionId) }),
+      ...(interviewerId && { interviewerId }),
     });
 
     if (aiServiceResult.success)
