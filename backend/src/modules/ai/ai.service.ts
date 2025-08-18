@@ -240,7 +240,7 @@ Respond ONLY with the raw JSON array. Do NOT include any extra text, markdown, o
       console.log("rawContent", rawContent);
       return {
         success: true,
-        data: Some.String(rawContent),
+        data: rawContent,
       };
     } catch (error) {
       return {
@@ -389,7 +389,6 @@ Respond ONLY with the raw JSON object. Do NOT include any extra text, markdown, 
       } as IInterviewDocument);
 
       const aiResponse = await this.getAiResponse(prompt);
-      
 
       const result = aiInterviewResponseSchema.safeParse(
         JSON.parse(aiResponse)

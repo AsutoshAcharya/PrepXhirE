@@ -28,7 +28,7 @@ class Authenticator {
       token,
       process.env.JWT as string
     ) as JwtDecodeData;
-    console.log(decoded);
+
     if (decoded)
       return {
         _id: toMongoObjectId(decoded.id),
@@ -49,7 +49,6 @@ class Authenticator {
   ) => {
     try {
       const token = Some.String(req.headers["token"]);
-      // const userId = Some.String(req.headers["user"]);
 
       if (!token) {
         return this.rb.badRequest(this.badRequestMessage).send(res);
@@ -72,7 +71,6 @@ class Authenticator {
   ) => {
     try {
       const token = Some.String(socket.handshake.headers["token"]);
-      // const userId = Some.String(socket.handshake.headers["user"]);
 
       if (!token) {
         return next(new Error(this.badRequestMessage));
@@ -86,7 +84,6 @@ class Authenticator {
 
       next();
     } catch (err) {
-      // console.log(err);
       return ErrorUtils.getErrorMessage(err, "Unauthorized");
     }
   };
