@@ -347,7 +347,7 @@ Respond ONLY with the raw JSON object. Do NOT include any extra text, markdown, 
       console.log("Error getting ai result", error);
       return {
         success: false,
-        message: ErrorUtils.getErrorMessage(error, "Something went wrong!"),
+        message: ErrorUtils.getErrorMessage(error),
       };
     }
   }
@@ -444,7 +444,7 @@ Respond ONLY with the raw JSON object. Do NOT include any extra text, markdown, 
       console.log("Error in ongoing interview", error);
       return {
         success: false,
-        message: ErrorUtils.getErrorMessage(error, "Something went wrong!"),
+        message: ErrorUtils.getErrorMessage(error),
       };
     }
   }
@@ -531,7 +531,7 @@ Respond ONLY with the raw JSON object. Do NOT include any extra text, markdown, 
       console.log(error);
       return {
         success: false,
-        message: ErrorUtils.getErrorMessage(error, "Something went wrong!"),
+        message: ErrorUtils.getErrorMessage(error),
       };
     }
   }

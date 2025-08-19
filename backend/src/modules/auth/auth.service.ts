@@ -92,7 +92,7 @@ export default class AuthService {
     } catch (error) {
       return {
         success: false,
-        message: ErrorUtils.getErrorMessage(error, "Something went wrong!"),
+        message: ErrorUtils.getErrorMessage(error),
       };
     }
   }

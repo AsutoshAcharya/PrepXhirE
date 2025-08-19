@@ -3,7 +3,7 @@ import Some from "./Some";
 class ErrorUtils {
   public static getErrorMessage(
     error: unknown,
-    fallback = "An error occurred"
+    fallback = "Something went wrong!"
   ): string {
     console.log("Error:", error);
     if (error instanceof Error) return error.message;
