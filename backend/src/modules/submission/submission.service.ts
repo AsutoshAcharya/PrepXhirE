@@ -125,16 +125,17 @@ class SubmissionService {
       const userSubmissions = await this.submissionModel
         .find({
           candidateId: candidateId,
-          ...((startDate || endDate) && {
-            createdAt: {
-              ...(startDate && {
+          ...(startDate &&
+            endDate && {
+              createdAt: {
                 $gte: new Date(startDate),
-              }),
-              ...(endDate && {
                 $lte: new Date(endDate),
-              }),
-            },
-          }),
+              },
+            }),
+          ...(startDate &&
+            !endDate && {
+              createdAt: new Date(startDate),
+            }),
         })
         .sort({ createdAt: -1 });
       return {
