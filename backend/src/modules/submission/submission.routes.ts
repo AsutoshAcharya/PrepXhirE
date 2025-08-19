@@ -8,7 +8,7 @@ const router = Router();
 router.get(
   "/:candidateId",
   authenticator.verifyToken,
-  submissionController.getUserSumbission
+  submissionController.getCandidateSubmissions
 );
 
 export default router;

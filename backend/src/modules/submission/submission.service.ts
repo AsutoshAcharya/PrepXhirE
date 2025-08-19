@@ -116,7 +116,7 @@ class SubmissionService {
     }
   }
 
-  public async getUserSubmission({
+  public async getCandidateSubmissions({
     candidateId,
     startDate,
     endDate,

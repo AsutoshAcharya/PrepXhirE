@@ -13,7 +13,10 @@ class SubmissionController {
     this.rb = new ResponseBuilder({ type: "submission" });
   }
 
-  public getUserSumbission = async (req: CustomRequest, res: Response) => {
+  public getCandidateSubmissions = async (
+    req: CustomRequest,
+    res: Response
+  ) => {
     if (!req.user) return this.rb.unauthorized().send(res);
     const candidateId = Some.String(req.params.id);
 
@@ -25,13 +28,12 @@ class SubmissionController {
 
     const { startDate, endDate } = req.query; //yyyy-mm-dd
 
-    const userSubmissionResult = await this.submissionService.getUserSubmission(
-      {
+    const userSubmissionResult =
+      await this.submissionService.getCandidateSubmissions({
         candidateId: Some.MongoId(candidateId),
         startDate: Some.String(startDate),
         endDate: Some.String(endDate),
-      }
-    );
+      });
 
     if (!userSubmissionResult.success)
       return this.rb.serverError(userSubmissionResult.message).send(res);
