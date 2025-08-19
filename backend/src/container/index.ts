@@ -10,6 +10,7 @@ import McqController from "../modules/mcq/mcq.controller";
 import AuthController from "../modules/auth/auth.controller";
 import HostedSessionController from "../modules/hostedSession/hostedSession.controller";
 import InterviewController from "../modules/interview/interview.controller";
+import SubmissionController from "../modules/submission/submission.controller";
 
 //services
 import AiService from "../modules/ai/ai.service";
@@ -44,6 +45,7 @@ export interface Dependencies {
   mcqController: McqController;
   hostedSessionController: HostedSessionController;
   interviewController: InterviewController;
+  submissionController: SubmissionController;
 
   authService: AuthService;
   mcqService: McqService;
@@ -70,6 +72,7 @@ container.register({
   mcqController: asClass(McqController).singleton(),
   hostedSessionController: asClass(HostedSessionController).singleton(),
   interviewController: asClass(InterviewController).singleton(),
+  submissionController: asClass(SubmissionController).singleton(),
 
   authService: asClass(AuthService).singleton(),
   mcqService: asClass(McqService).singleton(),

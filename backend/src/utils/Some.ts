@@ -1,3 +1,5 @@
+import { Types } from "mongoose";
+
 export default class Some {
   static Array<T = any>(arr?: any, defaultValue?: Array<T>): Array<T> {
     if (Array.isArray(arr)) return arr;
@@ -35,5 +37,9 @@ export default class Some {
     let date = new Date(dateStr);
     if (isNaN(date.valueOf())) return new Date();
     return new Date(date.toISOString().slice(0, -1));
+  }
+
+  static MongoId(id: string): Types.ObjectId {
+    return new Types.ObjectId(id);
   }
 }

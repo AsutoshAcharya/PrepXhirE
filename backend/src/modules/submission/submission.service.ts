@@ -2,11 +2,13 @@ import { Types } from "mongoose";
 import { Dependencies } from "../../container";
 import { ISubmissionDocument } from "../../models/submission.model";
 import {
+  GetUserSubmissionDto,
   InsertSubmissionDto,
   ServiceResult,
   SubmissionQuestionsResult,
 } from "../../types/type";
 import ErrorUtils from "../../utils/ErrorUtils";
+import Some from "../../utils/Some";
 const mcqQuestionsCollection = "mcqquestions";
 
 class SubmissionService {
@@ -110,6 +112,39 @@ class SubmissionService {
       return {
         success: false,
         message: ErrorUtils.getErrorMessage(error, "Error getting questions"),
+      };
+    }
+  }
+
+  public async getUserSubmission({
+    candidateId,
+    startDate,
+    endDate,
+  }: GetUserSubmissionDto): Promise<ServiceResult<Array<ISubmissionDocument>>> {
+    try {
+      const userSubmissions = await this.submissionModel
+        .find({
+          candidateId: candidateId,
+          ...((startDate || endDate) && {
+            createdAt: {
+              ...(startDate && {
+                $gte: new Date(startDate),
+              }),
+              ...(endDate && {
+                $lte: new Date(endDate),
+              }),
+            },
+          }),
+        })
+        .sort({ createdAt: -1 });
+      return {
+        success: true,
+        data: Some.Array<ISubmissionDocument>(userSubmissions),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: ErrorUtils.getErrorMessage(error, "Error getting submission"),
       };
     }
   }

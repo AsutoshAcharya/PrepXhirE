@@ -7,6 +7,7 @@ import authRoutes from "./modules/auth/auth.routes";
 import mcqRoutes from "./modules/mcq/mcq.routes";
 import hostedSessionRoutes from "./modules/hostedSession/hostedSession.routes";
 import interviewRoutes from "./modules/interview/interview.routes";
+import submissionRoutes from "./modules/submission/submission.routes";
 import connectToDb from "./config/db";
 import { createServer } from "http";
 import SocketServer from "./sockets/SocketServer";
@@ -53,6 +54,7 @@ class App {
     this.app.use("/mcq", mcqRoutes);
     this.app.use("/hosted-session", hostedSessionRoutes);
     this.app.use("/interview", interviewRoutes);
+    this.app.use("/submission", submissionRoutes);
   }
 
   public async run() {

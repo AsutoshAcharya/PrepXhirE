@@ -101,6 +101,12 @@ export interface SubmissionQuestionsResult {
   questions: Array<Partial<IMcqDocument>>;
 }
 
+export type GetUserSubmissionDto = {
+  startDate?: string;
+  endDate?: string;
+  candidateId: Types.ObjectId;
+};
+
 export type McqRoundDto = {
   roundTime: number;
   questionIds: Array<string>;
