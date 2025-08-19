@@ -16,7 +16,6 @@ import {
 import ResponseBuilder from "../../utils/ResponseBuilder";
 
 import Some from "../../utils/Some";
-import toMongoObjectId from "../../utils/toMongoObjectId";
 import moment from "moment";
 
 import pick from "../../utils/pick";
@@ -177,7 +176,7 @@ class McqController {
         .subtract(result.data.timeTaken, "minutes");
 
       const questionIds = result.data.responses.map((r) =>
-        toMongoObjectId(r.questionId)
+        Some.MongoId(r.questionId)
       );
       const serviceResult = await this.mcqService.getBulkMcqsByIds(questionIds);
 
@@ -212,7 +211,7 @@ class McqController {
 
         const insertSubmissionData: InsertSubmissionDto = {
           ...(parsedData.sessionId && {
-            sessionId: toMongoObjectId(parsedData.sessionId),
+            sessionId: Some.MongoId(parsedData.sessionId),
           }),
           candidateId: req.user._id,
           mode: parsedData.mode,
@@ -272,7 +271,7 @@ class McqController {
 
     const submissionServiceResult =
       await this.submissionService.getMcqsFromSubmission(
-        toMongoObjectId(submissionId)
+        Some.MongoId(submissionId)
       );
     if (submissionServiceResult.success)
       return this.rb

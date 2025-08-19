@@ -10,7 +10,7 @@ import {
 import ResponseBuilder from "../utils/ResponseBuilder";
 import Some from "../utils/Some";
 import { UserRole } from "../enums";
-import toMongoObjectId from "../utils/toMongoObjectId";
+
 import ErrorUtils from "../utils/ErrorUtils";
 
 class Authenticator {
@@ -31,7 +31,7 @@ class Authenticator {
 
     if (decoded)
       return {
-        _id: toMongoObjectId(decoded.id),
+        _id: Some.MongoId(decoded.id),
         fullName: decoded.name,
         email: decoded.email,
         role: decoded.role,

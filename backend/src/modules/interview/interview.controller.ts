@@ -5,7 +5,6 @@ import ResponseBuilder from "../../utils/ResponseBuilder";
 import Some from "../../utils/Some";
 import { JobTitle, RoundType } from "../../enums";
 import { isValidObjectId } from "mongoose";
-import toMongoObjectId from "../../utils/toMongoObjectId";
 import {
   interviewSubmitSchema,
   onGoingInterviewSchema,
@@ -57,7 +56,7 @@ class InterviewController {
 
     if (sessionId) {
       const sessionResult = await this.hostedSessionService.getSessionById(
-        toMongoObjectId(sessionId)
+        Some.MongoId(sessionId)
       );
 
       if (sessionResult.success) {
@@ -78,7 +77,7 @@ class InterviewController {
       candidateId: req.user._id,
       jobTitle: jobTitle,
       candidateSkills: skills,
-      ...(sessionId && { sessionId: toMongoObjectId(sessionId) }),
+      ...(sessionId && { sessionId: Some.MongoId(sessionId) }),
       ...(interviewerId && { interviewerId }),
     });
 
@@ -114,7 +113,7 @@ class InterviewController {
     };
 
     const aiResult = await this.aiService.onGoingInterview({
-      interviewId: toMongoObjectId(interviewId),
+      interviewId: Some.MongoId(interviewId),
       candidateId: req.user._id,
       ...input,
     });
@@ -147,7 +146,7 @@ class InterviewController {
     const startedAt = endedAt.clone().subtract(timeTaken, "minutes");
 
     const interviewResult = await this.interviewService.getInterviewById(
-      toMongoObjectId(interviewId)
+      Some.MongoId(interviewId)
     );
 
     if (!interviewResult.success)
@@ -162,14 +161,14 @@ class InterviewController {
       return this.rb.serverError(aiFeedbackResult.message).send(res);
 
     const submissionData: InsertSubmissionDto = {
-      ...(sessionId && { sessionId: toMongoObjectId(sessionId) }),
+      ...(sessionId && { sessionId: Some.MongoId(sessionId) }),
       candidateId: req.user._id,
       mode,
       roundType: RoundType.Interview,
       startedAt: startedAt.toDate(),
       endedAt: endedAt.toDate(),
       interviewData: {
-        interviewId: toMongoObjectId(interviewId),
+        interviewId: Some.MongoId(interviewId),
         score: aiFeedbackResult.data.score,
         overallAiFeedback: aiFeedbackResult.data.overallAiFeedback,
       },

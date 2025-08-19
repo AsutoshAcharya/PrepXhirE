@@ -4,9 +4,10 @@ import { IHostedSessionDocument } from "../../models/hostedSession.model";
 import { SessionDto, ServiceResult, SessionCandidate } from "../../types/type";
 import ErrorUtils from "../../utils/ErrorUtils";
 import { CandidateStatus } from "../../enums";
-import toMongoObjectId from "../../utils/toMongoObjectId";
+
 import { IMcqDocument } from "../../models/mcq.model";
 import pick from "../../utils/pick";
+import Some from "../../utils/Some";
 
 class HostedSessionService {
   private readonly mcqRoundModel;
@@ -187,7 +188,7 @@ class HostedSessionService {
       }
 
       const questionIds = mcqRoundData.questionIds.map((id) =>
-        toMongoObjectId(id)
+        Some.MongoId(id)
       );
       const mcqServiceResult =
         await this.mcqService.getBulkMcqsByIds(questionIds);

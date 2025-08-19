@@ -4,7 +4,7 @@ import { CustomRequest, HostedSessionDto, McqRoundDto } from "../../types/type";
 import ResponseBuilder from "../../utils/ResponseBuilder";
 import { hostedSessionSchema } from "./hostedSession.schema";
 import Some from "../../utils/Some";
-import toMongoObjectId from "../../utils/toMongoObjectId";
+
 import moment from "moment";
 import { CandidateStatus } from "../../enums";
 import { isValidObjectId } from "mongoose";
@@ -65,7 +65,7 @@ class HostedSessionController {
         ...(expireDate && { expireDate: moment(expireDate).utc().toDate() }),
         ...(candidates && {
           candidates: candidates.map((c) => ({
-            candidateId: toMongoObjectId(c),
+            candidateId: Some.MongoId(c),
             status: CandidateStatus.Invited,
           })),
         }),
@@ -149,7 +149,7 @@ class HostedSessionController {
       return this.rb.badRequest("Invalid sessionId").send(res);
 
     const joinSessionResult = await this.hostedSessionService.joinSession(
-      toMongoObjectId(sessionId),
+      Some.MongoId(sessionId),
       req.user._id
     );
 
