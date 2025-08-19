@@ -82,50 +82,51 @@ class InterviewController {
       ...(interviewerId && { interviewerId }),
     });
 
-    if (aiServiceResult.success)
-      return this.rb
-        .success({
-          message: "Interview started",
-          data: aiServiceResult.data,
-        })
-        .send(res);
+    if (!aiServiceResult.success)
+      return this.rb.serverError(aiServiceResult.message).send(res);
 
-    return this.rb.serverError(aiServiceResult.message).send(res);
+    return this.rb
+      .success({
+        message: "Interview started",
+        data: aiServiceResult.data,
+      })
+      .send(res);
   };
 
   public onGoingInterview = async (req: CustomRequest, res: Response) => {
     if (!req.user) return this.rb.unauthorized().send(res);
+
     const interviewId = Some.String(req.params.interviewId);
     if (!interviewId || !isValidObjectId(interviewId))
       return this.rb.badRequest("Invalid interviewId").send(res);
 
-    const result = onGoingInterviewSchema.safeParse(req.body);
-    if (result.success) {
-      const bodyData = {
-        userResponse: result.data.userResponse,
-        jobTitle: result.data.jobTitle || req.user?.jobTitle,
-        candidateSkills: result.data.skills || req.user.skills,
-      };
+    const parsed = onGoingInterviewSchema.safeParse(req.body);
+    if (!parsed.success)
+      return this.rb
+        .badRequest(parsed.error?.message || "Invalid payload")
+        .send(res);
 
-      const aiServiceResult = await this.aiService.onGoingInterview({
-        interviewId: toMongoObjectId(interviewId),
-        candidateId: req.user._id,
-        ...bodyData,
-      });
+    const { userResponse, jobTitle, skills } = parsed.data;
+    const input = {
+      userResponse,
+      jobTitle: jobTitle || req.user.jobTitle,
+      candidateSkills: skills || req.user.skills,
+    };
 
-      if (aiServiceResult.success)
-        return this.rb
-          .success({
-            message: "Ai Response",
-            data: aiServiceResult,
-          })
-          .send(res);
+    const aiResult = await this.aiService.onGoingInterview({
+      interviewId: toMongoObjectId(interviewId),
+      candidateId: req.user._id,
+      ...input,
+    });
 
-      return this.rb.serverError(aiServiceResult.message).send(res);
-    }
+    if (!aiResult.success)
+      return this.rb.serverError(aiResult.message).send(res);
 
     return this.rb
-      .badRequest(result.error?.message || "Invalid payload")
+      .success({
+        message: "Ai Response",
+        data: aiResult,
+      })
       .send(res);
   };
 
@@ -137,60 +138,55 @@ class InterviewController {
     if (!interviewId || !isValidObjectId(interviewId))
       return this.rb.badRequest("Invalid interviewId").send(res);
 
-    const result = interviewSubmitSchema.safeParse(req.body);
+    const parsed = interviewSubmitSchema.safeParse(req.body);
+    if (!parsed.success) return this.rb.badRequest("Invalid payload").send(res);
 
-    if (!result.success) return this.rb.badRequest("Invalid payload").send(res);
+    const { sessionId, timeTaken, mode } = parsed.data;
 
     const endedAt = moment.utc();
-    const startedAt = endedAt
-      .clone()
-      .subtract(result.data.timeTaken, "minutes");
+    const startedAt = endedAt.clone().subtract(timeTaken, "minutes");
 
     const interviewResult = await this.interviewService.getInterviewById(
       toMongoObjectId(interviewId)
     );
 
-    if (interviewResult.success) {
-      const aiFeedbackResult = await this.aiService.getInterviewFeedback({
-        ...pick(req.user, "jobTitle", "skills"),
-        interviewData: interviewResult.data,
-      });
-      const parsedData = result.data;
+    if (!interviewResult.success)
+      return this.rb.serverError(interviewResult.message).send(res);
 
-      if (aiFeedbackResult.success) {
-        const insertSubmissionData: InsertSubmissionDto = {
-          ...(parsedData.sessionId && {
-            sessionId: toMongoObjectId(parsedData.sessionId),
-          }),
-          candidateId: req.user._id,
-          mode: parsedData.mode,
-          roundType: RoundType.Interview,
-          startedAt: startedAt.toDate(),
-          endedAt: endedAt.toDate(),
-          interviewData: {
-            interviewId: toMongoObjectId(interviewId),
-            score: aiFeedbackResult.data.score,
-            overallAiFeedback: aiFeedbackResult.data.overallAiFeedback,
-          },
-        };
+    const aiFeedbackResult = await this.aiService.getInterviewFeedback({
+      ...pick(req.user, "jobTitle", "skills"),
+      interviewData: interviewResult.data,
+    });
 
-        const insertSubmissionResult =
-          await this.submissionService.insertSubmission(insertSubmissionData);
-        if (insertSubmissionResult.success)
-          return this.rb
-            .success({
-              message: "Submission Successful",
-              data: insertSubmissionResult.data,
-            })
-            .send(res);
-
-        return this.rb.serverError(insertSubmissionResult.message).send(res);
-      }
-
+    if (!aiFeedbackResult.success)
       return this.rb.serverError(aiFeedbackResult.message).send(res);
-    }
 
-    return this.rb.serverError(interviewResult.message).send(res);
+    const submissionData: InsertSubmissionDto = {
+      ...(sessionId && { sessionId: toMongoObjectId(sessionId) }),
+      candidateId: req.user._id,
+      mode,
+      roundType: RoundType.Interview,
+      startedAt: startedAt.toDate(),
+      endedAt: endedAt.toDate(),
+      interviewData: {
+        interviewId: toMongoObjectId(interviewId),
+        score: aiFeedbackResult.data.score,
+        overallAiFeedback: aiFeedbackResult.data.overallAiFeedback,
+      },
+    };
+
+    const insertResult =
+      await this.submissionService.insertSubmission(submissionData);
+
+    if (!insertResult.success)
+      return this.rb.serverError(insertResult.message).send(res);
+
+    return this.rb
+      .success({
+        message: "Submission Successful",
+        data: insertResult.data,
+      })
+      .send(res);
   };
 }
 
