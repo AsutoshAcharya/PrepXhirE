@@ -23,24 +23,23 @@ import { Difficulty, JobTitle, QuestionSource, RoundType } from "../../enums";
 
 class McqController {
   private readonly mcqService: McqService;
-  private readonly rb;
   private readonly aiService;
   private readonly submissionService;
   constructor({ mcqService, aiService, submissionService }: Dependencies) {
     this.mcqService = mcqService;
     this.aiService = aiService;
     this.submissionService = submissionService;
-
-    this.rb = new ResponseBuilder({ type: "mcq" });
   }
 
+  private rb = () => new ResponseBuilder({ type: "mcq" });
+
   public createMcq = async (req: CustomRequest, res: Response) => {
-    if (!req.user) return this.rb.unauthorized().send(res);
+    if (!req.user) return this.rb().unauthorized().send(res);
 
     const mcqs = Some.Array(req.body?.mcqs);
 
     if (mcqs.length === 0) {
-      return this.rb.badRequest("No MCQs provided").send(res);
+      return this.rb().badRequest("No MCQs provided").send(res);
     }
 
     const parsedMcqs: Array<InsertDto> = [];
@@ -48,7 +47,7 @@ class McqController {
       const result = createMcqSchema.safeParse(mcq);
       if (!result.success) {
         // console.log(result.error);
-        return this.rb.badRequest("Invalid mcq question").send(res);
+        return this.rb().badRequest("Invalid mcq question").send(res);
       }
       parsedMcqs.push({
         ...result.data,
@@ -61,10 +60,10 @@ class McqController {
     const serviceResult = await this.mcqService.addBulkMcqs(parsedMcqs);
 
     if (!serviceResult.success) {
-      return this.rb.badRequest(serviceResult.message).send(res);
+      return this.rb().badRequest(serviceResult.message).send(res);
     }
 
-    return this.rb
+    return this.rb()
       .success({
         message: "MCQs created successfully",
         data: serviceResult.data,
@@ -78,7 +77,7 @@ class McqController {
     //   "Teamwork & Collaboration",
     // ];
 
-    if (!req.user) return this.rb.unauthorized().send(res);
+    if (!req.user) return this.rb().unauthorized().send(res);
     //topics will be based on skills ,send comma separated values
     const { difficulty, jobRole, skills, questionCount } = req.query;
 
@@ -90,7 +89,8 @@ class McqController {
     };
     console.log(queryData);
     const result = generateMcqQuerySchema.safeParse(queryData);
-    if (!result.success) return this.rb.badRequest("Invalid queries").send(res);
+    if (!result.success)
+      return this.rb().badRequest("Invalid queries").send(res);
     console.log(result.data);
 
     const generateMcqDto: GenerateMcqDto = {
@@ -106,39 +106,39 @@ class McqController {
       await this.aiService.generateMcqQuestions(generateMcqDto);
 
     if (serviceResult.success) {
-      return this.rb
+      return this.rb()
         .success({
           message: "Questions Generated",
           data: serviceResult.data,
         })
         .send(res);
     }
-    return this.rb.serverError(serviceResult.message).send(res);
+    return this.rb().serverError(serviceResult.message).send(res);
   };
 
   public deleteMcqById = async (req: CustomRequest, res: Response) => {
     const id = Some.String(req.params.id);
-    if (!req.user) return this.rb.unauthorized().send(res);
-    if (!id) return this.rb.badRequest("Missing mcq id").send(res);
+    if (!req.user) return this.rb().unauthorized().send(res);
+    if (!id) return this.rb().badRequest("Missing mcq id").send(res);
 
     const serviceResult = await this.mcqService.deleteMcqById(id, req.user._id);
 
     if (serviceResult.success)
-      return this.rb
+      return this.rb()
         .success({
           message: "Question deleted successfully",
           data: serviceResult.data,
         })
         .send(res);
 
-    return this.rb.serverError(serviceResult.message).send(res);
+    return this.rb().serverError(serviceResult.message).send(res);
   };
 
   public updateMcqById = async (req: CustomRequest, res: Response) => {
     const id = Some.String(req.params.id);
     const mcq = Some.Object(req.body);
-    if (!req.user) return this.rb.unauthorized().send(res);
-    if (!id) return this.rb.badRequest("Missing mcq id").send(res);
+    if (!req.user) return this.rb().unauthorized().send(res);
+    if (!id) return this.rb().badRequest("Missing mcq id").send(res);
     const result = createMcqSchema
       .partial()
       .refine((data) => Object.keys(data).length > 0, {
@@ -152,20 +152,20 @@ class McqController {
         result.data
       );
       if (serviceResult.success)
-        return this.rb
+        return this.rb()
           .success({
             message: "Mcq updated successfully",
             data: serviceResult.data,
           })
           .send(res);
 
-      return this.rb.serverError(serviceResult.message).send(res);
+      return this.rb().serverError(serviceResult.message).send(res);
     }
-    return this.rb.serverError("Invalid mcq data").send(res);
+    return this.rb().serverError("Invalid mcq data").send(res);
   };
 
   public submitMcq = async (req: CustomRequest, res: Response) => {
-    if (!req.user) return this.rb.unauthorized().send(res);
+    if (!req.user) return this.rb().unauthorized().send(res);
 
     const result = submitSchema.safeParse(req.body);
 
@@ -231,56 +231,56 @@ class McqController {
           await this.submissionService.insertSubmission(insertSubmissionData);
 
         if (insertSubmissionServiceResult.success)
-          return this.rb
+          return this.rb()
             .success({
               message: "Submission successful",
               data: insertSubmissionServiceResult.data,
             })
             .send(res);
 
-        return this.rb
+        return this.rb()
           .serverError(insertSubmissionServiceResult.message)
           .send(res);
       }
-      return this.rb.serverError(serviceResult.message).send(res);
+      return this.rb().serverError(serviceResult.message).send(res);
     }
-    return this.rb.badRequest("Invalid payload").send(res);
+    return this.rb().badRequest("Invalid payload").send(res);
   };
 
   public deleteSubmission = async (req: CustomRequest, res: Response) => {
-    if (!req.user) return this.rb.unauthorized().send(res);
+    if (!req.user) return this.rb().unauthorized().send(res);
     const submissionId = Some.String(req.params.id);
     const serviceResult =
       await this.submissionService.deleteSubmission(submissionId);
     if (serviceResult.success)
-      return this.rb
+      return this.rb()
         .success({
           message: "Submission deleted successfully",
           data: serviceResult.data,
         })
         .send(res);
 
-    return this.rb.serverError(serviceResult.message).send(res);
+    return this.rb().serverError(serviceResult.message).send(res);
   };
 
   public retakeMcq = async (req: CustomRequest, res: Response) => {
-    if (!req.user) return this.rb.unauthorized().send(res);
+    if (!req.user) return this.rb().unauthorized().send(res);
     const submissionId = Some.String(req.params.submissionId);
     if (!submissionId)
-      return this.rb.badRequest("Missing submission id").send(res);
+      return this.rb().badRequest("Missing submission id").send(res);
 
     const submissionServiceResult =
       await this.submissionService.getMcqsFromSubmission(
         Some.MongoId(submissionId)
       );
     if (submissionServiceResult.success)
-      return this.rb
+      return this.rb()
         .success({
           message: "Retake questions fetched successfully",
           data: submissionServiceResult.data,
         })
         .send(res);
-    return this.rb.serverError(submissionServiceResult.message).send(res);
+    return this.rb().serverError(submissionServiceResult.message).send(res);
   };
 }
 

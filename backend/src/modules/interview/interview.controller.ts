@@ -15,7 +15,7 @@ import pick from "../../utils/pick";
 class InterviewController {
   private readonly interviewService;
   private readonly aiService;
-  private readonly rb;
+
   private readonly socketServer;
   private readonly submissionService;
   private readonly hostedSessionService;
@@ -28,26 +28,27 @@ class InterviewController {
   }: Dependencies) {
     this.interviewService = interviewService;
     this.aiService = aiService;
-    this.rb = new ResponseBuilder({ type: "interview" });
+
     this.socketServer = socketServer;
     this.submissionService = submissionService;
     this.hostedSessionService = hostedSessionService;
   }
+  private rb = () => new ResponseBuilder({ type: "interview" });
 
   public test = async (req: CustomRequest, res: Response) => {
-    if (!req.user) return this.rb.unauthorized().send(res);
+    if (!req.user) return this.rb().unauthorized().send(res);
     // console.log(this.socketServer.io);
     this.socketServer.io.emit("serverResponse", "Hello");
-    return this.rb.success({ message: "Socket test" }).send(res);
+    return this.rb().success({ message: "Socket test" }).send(res);
   };
 
   public startInterview = async (req: CustomRequest, res: Response) => {
-    if (!req.user) return this.rb.unauthorized().send(res);
+    if (!req.user) return this.rb().unauthorized().send(res);
 
     const { sessionId } = req.body;
 
     if (sessionId && !isValidObjectId(sessionId))
-      return this.rb.badRequest("Invalid session id").send(res);
+      return this.rb().badRequest("Invalid session id").send(res);
 
     let jobTitle = Some.String(req.user?.jobTitle) as JobTitle;
     let skills = req.user.skills;
@@ -65,12 +66,14 @@ class InterviewController {
             (c) => String(c.candidateId) === String(req.user?._id)
           )
         )
-          return this.rb.badRequest("You can not join this session").send(res);
+          return this.rb()
+            .badRequest("You can not join this session")
+            .send(res);
 
         jobTitle = sessionResult.data.jobTitle;
         skills = sessionResult.data.requiredSkills;
         interviewerId = sessionResult.data.interviewerId;
-      } else this.rb.serverError(sessionResult.message).send(res);
+      } else this.rb().serverError(sessionResult.message).send(res);
     }
 
     const aiServiceResult = await this.aiService.startInterview({
@@ -82,9 +85,9 @@ class InterviewController {
     });
 
     if (!aiServiceResult.success)
-      return this.rb.serverError(aiServiceResult.message).send(res);
+      return this.rb().serverError(aiServiceResult.message).send(res);
 
-    return this.rb
+    return this.rb()
       .success({
         message: "Interview started",
         data: aiServiceResult.data,
@@ -93,15 +96,15 @@ class InterviewController {
   };
 
   public onGoingInterview = async (req: CustomRequest, res: Response) => {
-    if (!req.user) return this.rb.unauthorized().send(res);
+    if (!req.user) return this.rb().unauthorized().send(res);
 
     const interviewId = Some.String(req.params.interviewId);
     if (!interviewId || !isValidObjectId(interviewId))
-      return this.rb.badRequest("Invalid interviewId").send(res);
+      return this.rb().badRequest("Invalid interviewId").send(res);
 
     const parsed = onGoingInterviewSchema.safeParse(req.body);
     if (!parsed.success)
-      return this.rb
+      return this.rb()
         .badRequest(parsed.error?.message || "Invalid payload")
         .send(res);
 
@@ -119,9 +122,9 @@ class InterviewController {
     });
 
     if (!aiResult.success)
-      return this.rb.serverError(aiResult.message).send(res);
+      return this.rb().serverError(aiResult.message).send(res);
 
-    return this.rb
+    return this.rb()
       .success({
         message: "Ai Response",
         data: aiResult,
@@ -131,14 +134,15 @@ class InterviewController {
 
   //submission
   public endInterview = async (req: CustomRequest, res: Response) => {
-    if (!req.user) return this.rb.unauthorized().send(res);
+    if (!req.user) return this.rb().unauthorized().send(res);
 
     const interviewId = Some.String(req.params.interviewId);
     if (!interviewId || !isValidObjectId(interviewId))
-      return this.rb.badRequest("Invalid interviewId").send(res);
+      return this.rb().badRequest("Invalid interviewId").send(res);
 
     const parsed = interviewSubmitSchema.safeParse(req.body);
-    if (!parsed.success) return this.rb.badRequest("Invalid payload").send(res);
+    if (!parsed.success)
+      return this.rb().badRequest("Invalid payload").send(res);
 
     const { sessionId, timeTaken, mode } = parsed.data;
 
@@ -150,7 +154,7 @@ class InterviewController {
     );
 
     if (!interviewResult.success)
-      return this.rb.serverError(interviewResult.message).send(res);
+      return this.rb().serverError(interviewResult.message).send(res);
 
     const aiFeedbackResult = await this.aiService.getInterviewFeedback({
       ...pick(req.user, "jobTitle", "skills"),
@@ -158,7 +162,7 @@ class InterviewController {
     });
 
     if (!aiFeedbackResult.success)
-      return this.rb.serverError(aiFeedbackResult.message).send(res);
+      return this.rb().serverError(aiFeedbackResult.message).send(res);
 
     const submissionData: InsertSubmissionDto = {
       ...(sessionId && { sessionId: Some.MongoId(sessionId) }),
@@ -178,9 +182,9 @@ class InterviewController {
       await this.submissionService.insertSubmission(submissionData);
 
     if (!insertResult.success)
-      return this.rb.serverError(insertResult.message).send(res);
+      return this.rb().serverError(insertResult.message).send(res);
 
-    return this.rb
+    return this.rb()
       .success({
         message: "Submission Successful",
         data: insertResult.data,

@@ -7,24 +7,26 @@ import { isValidObjectId } from "mongoose";
 
 class SubmissionController {
   private readonly submissionService;
-  private readonly rb;
+  // private readonly rb;
   constructor({ submissionService }: Dependencies) {
     this.submissionService = submissionService;
-    this.rb = new ResponseBuilder({ type: "submission" });
+    // this.rb = new ResponseBuilder({ type: "submission" });
   }
+
+  private rb = () => new ResponseBuilder({ type: "submission" });
 
   public getCandidateSubmissions = async (
     req: CustomRequest,
     res: Response
   ) => {
-    if (!req.user) return this.rb.unauthorized().send(res);
+    if (!req.user) return this.rb().unauthorized().send(res);
     const candidateId = Some.String(req.params.id);
 
     if (!candidateId)
-      return this.rb.badRequest("Missing candidateId").send(res);
+      return this.rb().badRequest("Missing candidateId").send(res);
 
     if (!isValidObjectId(candidateId))
-      return this.rb.badRequest("Invalid candidateId").send(res);
+      return this.rb().badRequest("Invalid candidateId").send(res);
 
     const { startDate, endDate } = req.query; //yyyy-mm-dd
 
@@ -36,9 +38,9 @@ class SubmissionController {
       });
 
     if (!userSubmissionResult.success)
-      return this.rb.serverError(userSubmissionResult.message).send(res);
+      return this.rb().serverError(userSubmissionResult.message).send(res);
 
-    return this.rb
+    return this.rb()
       .success({
         message: "Candidate submissions fetched successfully",
         data: userSubmissionResult.data,
