@@ -1,35 +1,30 @@
-import { Map } from "immutable";
-import { ResponseStruct } from "../types/type";
 import { Response } from "express";
+import { ResponseStruct } from "../types/type";
 
 class ResponseBuilder {
-  private response: Map<
-    keyof ResponseStruct,
-    ResponseStruct[keyof ResponseStruct]
-  >;
+  private response: ResponseStruct;
 
   constructor(defaults: Partial<ResponseStruct> = {}) {
-    const base: ResponseStruct = {
+    this.response = {
       success: null,
       message: "",
       type: null,
       data: null,
       status: 200,
+      ...defaults,
     };
-
-    this.response = Map({ ...base, ...defaults });
   }
 
   public set<K extends keyof ResponseStruct>(
     key: K,
     value: ResponseStruct[K]
   ): this {
-    this.response = this.response.set(key, value);
+    this.response[key] = value;
     return this;
   }
 
   public setMultiple(values: Partial<ResponseStruct>): this {
-    this.response = this.response.merge(values) as typeof this.response;
+    Object.assign(this.response, values);
     return this;
   }
 
@@ -44,9 +39,9 @@ class ResponseBuilder {
     return this.setMultiple({
       success: true,
       message,
-      data: data ?? null,
-      ...(type && { type: type }),
-      status: status,
+      data,
+      ...(type ? { type } : {}),
+      status,
     });
   }
 
@@ -59,7 +54,7 @@ class ResponseBuilder {
       success: false,
       message,
       data: null,
-      ...(type && { type: type }),
+      ...(type ? { type } : {}),
       status,
     });
   }
@@ -93,7 +88,7 @@ class ResponseBuilder {
   }
 
   public build(): ResponseStruct {
-    return this.response.toJS() as ResponseStruct;
+    return this.response;
   }
 
   public send(res: Response): Response {
