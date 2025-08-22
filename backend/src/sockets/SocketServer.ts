@@ -55,7 +55,6 @@ class SocketServer {
 
   public listenInterviewRoomJoins(socket: CustomSocket) {
     socket.on(Event.JoinInterviewRoom, (joinRoomDto: JoinRoomDto) => {
-      // console.log(candidateId, interviewId);
       if (!joinRoomDto.candidateId || !joinRoomDto.interviewId) {
         return socket.emit(Event.Error, {
           message: "Missing candidateId or interviewId",
