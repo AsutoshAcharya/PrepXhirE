@@ -1,4 +1,4 @@
-import express, { Express, NextFunction, Request, Response } from "express";
+import express, { Express, Request, Response } from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
 
@@ -12,16 +12,12 @@ import connectToDb from "./config/db";
 import { createServer } from "http";
 import SocketServer from "./sockets/SocketServer";
 import container from "./container";
+import rateLimit from "express-rate-limit";
+import ResponseBuilder from "./utils/ResponseBuilder";
 
 const socketServer = container.resolve<SocketServer>("socketServer");
 
 dotenv.config();
-
-// let maxToken = 10;
-// setInterval(() => {
-//   maxToken = 10;
-//   console.log(maxToken);
-// }, 60000);
 
 class App {
   private app: Express;
@@ -39,14 +35,18 @@ class App {
   }
 
   private setupMiddlewares() {
+    const limiter = rateLimit({
+      limit: 1000,
+      windowMs: 600000,
+      handler: (_req: Request, res: Response) => {
+        const rb = new ResponseBuilder({ type: "rate_limit_exceeded" });
+        return rb.tooManyRequests().send(res);
+      },
+    });
+    this.app.use("/", limiter);
+
     this.app.use(cors());
     this.app.use(bodyParser.json());
-    // this.app.use("/", (req: Request, res: Response, next: NextFunction) => {
-    //   console.log(req.ip);
-    //   if (maxToken === 0) return res.status(409).send("Too many requests");
-    //   maxToken--;
-    //   next();
-    // });
   }
 
   private setupRoutes() {

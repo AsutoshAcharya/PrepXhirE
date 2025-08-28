@@ -87,6 +87,12 @@ class ResponseBuilder {
     return this.error({ message, status, type });
   }
 
+  public tooManyRequests(
+    message = "Too many requests, please try again later!"
+  ) {
+    return this.error({ message, status: 429 });
+  }
+
   public build(): ResponseStruct {
     return this.response;
   }
