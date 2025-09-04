@@ -1,4 +1,4 @@
-import { NextFunction, Request } from "express";
+import { NextFunction, Request, Response } from "express";
 import { IUserDocument } from "../models/user.model";
 import { JwtPayload } from "jsonwebtoken";
 import { CreateMcqDto } from "../modules/mcq/mcq.schema";
@@ -44,6 +44,10 @@ export interface JwtDecodeData extends JwtPayload {
 export type AuthUser = Omit<IUserDocument, "password">;
 export interface CustomRequest extends Request {
   user?: AuthUser;
+}
+
+export interface ValidatedRequest<T> extends CustomRequest {
+  validatedData: T;
 }
 
 export type InsertDto = CreateMcqDto & {

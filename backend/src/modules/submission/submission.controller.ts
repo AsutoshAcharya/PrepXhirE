@@ -7,10 +7,9 @@ import { isValidObjectId } from "mongoose";
 
 class SubmissionController {
   private readonly submissionService;
-  // private readonly rb;
+
   constructor({ submissionService }: Dependencies) {
     this.submissionService = submissionService;
-    // this.rb = new ResponseBuilder({ type: "submission" });
   }
 
   private rb = () => new ResponseBuilder({ type: "submission" });
